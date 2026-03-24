@@ -39,14 +39,89 @@
     border-top: 1px solid rgba(255,255,255,0.08) !important;
     border-bottom: 1px solid rgba(255,255,255,0.08) !important;
   }
-  /* Controls in docs tables should inherit dark surface */
-  .docblock-argstable input,
-  .docblock-argstable select,
-  .docblock-argstable textarea,
-  .docblock-argstable button {
+  /*
+   * Controls: only the real Control column (4th cell). Section/subsection rows are 2 cells wide
+   * and use full-cell <button> overlays with color: transparent — theming every input/button made
+   * helper text show twice and broke boolean switches (checkbox needs native styling).
+   */
+  .docblock-argstable-body > tr > td:nth-child(4) input:not([type='checkbox']):not([type='radio']):not(
+      [type='range']
+    ):not([type='file']):not([type='hidden']),
+  .docblock-argstable-body > tr > td:nth-child(4) select,
+  .docblock-argstable-body > tr > td:nth-child(4) textarea {
     background-color: #232329 !important;
-    color: #F5F5F7 !important;
-    border-color: rgba(255,255,255,0.16) !important;
+    color: #f5f5f7 !important;
+    border-color: rgba(255, 255, 255, 0.16) !important;
+  }
+  .docblock-argstable-body > tr > td:nth-child(4) button {
+    background-color: #232329 !important;
+    color: #f5f5f7 !important;
+    border-color: rgba(255, 255, 255, 0.16) !important;
+  }
+  .docblock-argstable-body > tr > td:nth-child(4) label span[aria-hidden='true'] {
+    color: #d4d4d8 !important;
+  }
+  .docblock-argstable-body > tr:not(:has(> td:nth-child(3))) button {
+    background: transparent !important;
+    color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  /*
+   * ArgsTable type + default cells use emotion (codeCommon / transparentize) tuned for Storybook's
+   * own dark surface; on our custom #232329 they read as near-black. Force readable text only when
+   * the full table is present (≥3 header columns — avoids compact Name+Control tables).
+   */
+  .docblock-argstable:has(.docblock-argstable-head th:nth-child(3))
+    .docblock-argstable-body
+    tr
+    > td:nth-child(2)
+    > div:last-of-type,
+  .docblock-argstable:has(.docblock-argstable-head th:nth-child(3))
+    .docblock-argstable-body
+    tr
+    > td:nth-child(2)
+    > div:last-of-type
+    * {
+    color: #e4e4e7 !important;
+  }
+  .docblock-argstable:has(.docblock-argstable-head th:nth-child(3))
+    .docblock-argstable-body
+    tr
+    > td:nth-child(3),
+  .docblock-argstable:has(.docblock-argstable-head th:nth-child(3))
+    .docblock-argstable-body
+    tr
+    > td:nth-child(3)
+    * {
+    color: #e4e4e7 !important;
+  }
+  /* Inline “chip” styling from codeCommon: keep transparent so text contrast stays consistent */
+  .docblock-argstable:has(.docblock-argstable-head th:nth-child(3))
+    .docblock-argstable-body
+    tr
+    > td:nth-child(2)
+    > div:last-of-type
+    span,
+  .docblock-argstable:has(.docblock-argstable-head th:nth-child(3))
+    .docblock-argstable-body
+    tr
+    > td:nth-child(3)
+    span {
+    background: transparent !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+  }
+  /* Inline code in MDX + ArgsTable (exclude pre > code — syntax blocks keep highlighter colors) */
+  .sbdocs-content code:not(pre code) {
+    color: #e4e4e7 !important;
+    background-color: rgba(255, 255, 255, 0.06) !important;
+  }
+  /* Story canvas toolbar: ghost actions stay legible on dark preview chrome */
+  .sbdocs-preview-actions button {
+    color: #d4d4d8 !important;
+  }
+  .sbdocs-preview-actions button:hover {
+    color: #f5f5f7 !important;
   }
   /* Source code block */
   .docblock-source,

@@ -1,32 +1,9 @@
 <style>
-  /* Docs page background */
-  .sb-doc-wrapper,
-  .sbdocs,
-  .sbdocs-wrapper,
-  .sbdocs-content,
-  #storybook-docs,
-  [class*="sbdocs"],
-  [class*="docblock"],
-  .docs-story,
-  .innerZoom > div,
-  div[class*="Wrapper"],
-  div[class*="wrapper"] {
-    background: #1B1B1F !important;
-    background-color: #1B1B1F !important;
-  }
-
-  /* Story canvas inside docs */
-  .docs-story > div,
-  [class*="PreviewWrapper"],
-  [class*="preview-wrapper"] {
-    background: #232329 !important;
-    border-radius: 8px !important;
-    border: 1px solid rgba(255,255,255,0.06) !important;
-  }
-
-  /* Source code block */
-  [class*="Source"],
-  [class*="source"] pre {
-    background: #141416 !important;
-  }
+  /*
+   * Manager shell is themed via .storybook/manager.ts (PrismTheme).
+   * Docs + canvas live in the preview iframe — use preview-head.html for those.
+   *
+   * Do not use broad attribute selectors like [class*="wrapper"] or [class*="source"]
+   * here: they match Storybook internals and can break layout, contrast, or hit targets.
+   */
 </style>
