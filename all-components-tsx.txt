@@ -1,0 +1,6442 @@
+===== src/components/atoms/Avatar/Avatar.tsx =====
+import styles from './Avatar.module.css';
+
+export type AvatarProps = {
+  src?: string;
+  alt?: string;
+  name?: string;
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'presenter';
+  variant?: 'circle' | 'square';
+  status?: 'online' | 'offline' | 'away';
+  className?: string;
+};
+
+const sizeClassMap = {
+  xs: styles.sizeXs,
+  sm: styles.sizeSm,
+  md: styles.sizeMd,
+  lg: styles.sizeLg,
+  xl: styles.sizeXl,
+  presenter: styles.sizePresenter,
+} as const;
+
+const initialsHueClasses = [
+  styles.initialsHue0,
+  styles.initialsHue1,
+  styles.initialsHue2,
+  styles.initialsHue3,
+] as const;
+
+function hashName(name: string): number {
+  let h = 0;
+  for (let i = 0; i < name.length; i += 1) {
+    h = (h + name.charCodeAt(i) * (i + 1)) % 100007;
+  }
+  return Math.abs(h) % initialsHueClasses.length;
+}
+
+export function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '';
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+  return `${parts[0][0] ?? ''}${parts[parts.length - 1][0] ?? ''}`.toUpperCase();
+}
+
+export const Avatar = ({
+  src,
+  alt,
+  name,
+  size = 'md',
+  variant = 'circle',
+  status,
+  className,
+}: AvatarProps) => {
+  const shapeClass = variant === 'circle' ? styles.circle : styles.square;
+  const rootClass = [
+    styles.root,
+    shapeClass,
+    sizeClassMap[size],
+    className ?? '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const initialsSizeClass =
+    size === 'xs' || size === 'presenter'
+      ? styles.initialsXs
+      : size === 'sm'
+        ? styles.initialsSm
+        : size === 'md'
+          ? styles.initialsMd
+          : size === 'lg'
+            ? styles.initialsLg
+            : styles.initialsXl;
+
+  const initials = name != null ? getInitials(name) : '';
+  const hueClass =
+    name != null && initials.length > 0
+      ? initialsHueClasses[hashName(name)]
+      : '';
+
+  const initialsClass = [
+    styles.initials,
+    initialsSizeClass,
+    hueClass,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const statusClass =
+    status === 'online'
+      ? styles.statusOnline
+      : status === 'offline'
+        ? styles.statusOffline
+        : status === 'away'
+          ? styles.statusAway
+          : '';
+
+  const statusDot =
+    status != null ? (
+      <span
+        className={[styles.status, statusClass].filter(Boolean).join(' ')}
+        aria-hidden="true"
+      />
+    ) : null;
+
+  if (src != null && src.length > 0) {
+    return (
+      <span className={rootClass}>
+        <span className={styles.inner}>
+          <img className={styles.image} src={src} alt={alt ?? name ?? ''} />
+        </span>
+        {statusDot}
+      </span>
+    );
+  }
+
+  if (initials.length > 0) {
+    return (
+      <span className={rootClass} aria-label={name} role="img">
+        <span className={styles.inner}>
+          <span className={initialsClass}>{initials}</span>
+        </span>
+        {statusDot}
+      </span>
+    );
+  }
+
+  return (
+    <span className={rootClass} aria-label={alt ?? 'User'} role="img">
+      <span className={styles.inner}>
+        <span className={styles.fallback}>
+          <span className={styles.personHead} />
+          <span className={styles.personBody} />
+        </span>
+      </span>
+      {statusDot}
+    </span>
+  );
+};
+
+export type AvatarGroupProps = {
+  avatars: AvatarProps[];
+  max?: number;
+};
+
+export const AvatarGroup = ({
+  avatars,
+  max = 4,
+}: AvatarGroupProps) => {
+  const visible = avatars.slice(0, max);
+  const rest = Math.max(0, avatars.length - max);
+
+  return (
+    <div className={styles.group} role="group" aria-label="Avatars">
+      {visible.map((props, index) => (
+        <span
+          key={props.name ?? props.src ?? String(index)}
+          className={styles.groupItem}
+        >
+          <Avatar {...props} size="sm" className={styles.avatarStacked} />
+        </span>
+      ))}
+      {rest > 0 ? (
+        <span
+          className={styles.groupMore}
+          aria-label={`${rest} more`}
+        >
+          +{rest}
+        </span>
+      ) : null}
+    </div>
+  );
+};
+
+===== src/components/atoms/Badge/Badge.tsx =====
+import styles from './Badge.module.css';
+
+export type BadgeProps = {
+  label: string;
+  variant?: 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral';
+  size?: 'sm' | 'md';
+  dot?: boolean;
+};
+
+const variantClassMap = {
+  primary: styles.variantPrimary,
+  success: styles.variantSuccess,
+  warning: styles.variantWarning,
+  error: styles.variantError,
+  info: styles.variantInfo,
+  neutral: styles.variantNeutral,
+} as const;
+
+export const Badge = ({
+  label,
+  variant = 'primary',
+  size = 'md',
+  dot = false,
+}: BadgeProps) => {
+  const rootClass = [
+    styles.root,
+    variantClassMap[variant],
+    size === 'sm' ? styles.sizeSm : styles.sizeMd,
+  ].join(' ');
+
+  return (
+    <span className={rootClass}>
+      {dot ? <span className={styles.dot} aria-hidden="true" /> : null}
+      {label}
+    </span>
+  );
+};
+
+===== src/components/atoms/Blockquote/Blockquote.tsx =====
+import type { ReactNode } from 'react';
+import styles from './Blockquote.module.css';
+
+export type BlockquoteProps = {
+  children: ReactNode;
+  cite?: string;
+  variant?: 'default' | 'primary' | 'success' | 'info';
+  className?: string;
+};
+
+const variantClassMap = {
+  default: styles.variantDefault,
+  primary: styles.variantPrimary,
+  success: styles.variantSuccess,
+  info: styles.variantInfo,
+} as const;
+
+export const Blockquote = ({
+  children,
+  cite,
+  variant = 'default',
+  className,
+}: BlockquoteProps) => {
+  const rootClass = [styles.root, variantClassMap[variant], className ?? '']
+    .filter(Boolean)
+    .join(' ');
+
+  return (
+    <blockquote className={rootClass}>
+      <div className={styles.quote}>{children}</div>
+      {cite ? (
+        <footer className={styles.citation}>— {cite}</footer>
+      ) : null}
+    </blockquote>
+  );
+};
+
+===== src/components/atoms/Button/Button.tsx =====
+import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import styles from './Button.module.css';
+
+export type ButtonProps = {
+  label?: string;
+  type?: 'default' | 'outlined' | 'transparent';
+  status?: 'default' | 'hover' | 'pressed' | 'focus' | 'disabled';
+  /**
+   * `true` shows the left icon slot (uses `iconLeft1` or a default info glyph).
+   * `false` / omit hides it. A `ReactNode` is still supported for legacy call sites.
+   */
+  iconLeft?: boolean | ReactNode;
+  /**
+   * `true` shows the right icon slot (uses `iconRight1` or a default info glyph).
+   * `false` / omit hides it. A `ReactNode` is still supported for legacy call sites.
+   */
+  iconRight?: boolean | ReactNode;
+  iconLeft1?: ReactNode | null;
+  iconRight1?: ReactNode | null;
+  onClick?: () => void;
+  colorScheme?: 'primary' | 'success' | 'information';
+} & Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'type' | 'onClick'>;
+
+const typeClassMap = {
+  default: styles.typeDefault,
+  outlined: styles.typeOutlined,
+  transparent: styles.typeTransparent,
+} as const;
+
+function renderIconSlot(
+  flag: boolean | ReactNode | undefined,
+  custom: ReactNode | null | undefined,
+): ReactNode | null {
+  if (flag === true) {
+    const content =
+      custom != null ? (
+        custom
+      ) : (
+        <span className={styles.defaultInfoIcon} aria-hidden>
+          i
+        </span>
+      );
+    return <span className={styles.iconSlot}>{content}</span>;
+  }
+  if (flag === false || flag === undefined) {
+    return null;
+  }
+  return <span className={styles.iconSlot}>{flag}</span>;
+}
+
+export const Button = ({
+  label,
+  type: buttonType = 'default',
+  status = 'default',
+  iconLeft,
+  iconRight,
+  iconLeft1,
+  iconRight1,
+  onClick,
+  colorScheme = 'primary',
+  disabled,
+  className,
+  ...rest
+}: ButtonProps) => {
+  const isDisabled = disabled === true || status === 'disabled';
+  const interactive = status === 'default';
+  const forceHover = status === 'hover';
+  const forcePressed = status === 'pressed';
+  const forceFocus = status === 'focus';
+
+  const schemeClass =
+    colorScheme === 'success'
+      ? styles.schemeSuccess
+      : colorScheme === 'information'
+        ? styles.schemeInformation
+        : undefined;
+
+  const rootClass = [
+    styles.root,
+    typeClassMap[buttonType],
+    schemeClass,
+    interactive ? styles.interactive : '',
+    forceHover ? styles.forceHover : '',
+    forcePressed ? styles.forcePressed : '',
+    forceFocus ? styles.forceFocus : '',
+    className ?? '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const leftSlot = renderIconSlot(iconLeft, iconLeft1);
+  const rightSlot = renderIconSlot(iconRight, iconRight1);
+
+  return (
+    <button
+      type="button"
+      className={rootClass}
+      disabled={isDisabled}
+      onClick={isDisabled ? undefined : onClick}
+      {...rest}
+    >
+      {leftSlot}
+      {label != null ? <span className={styles.label}>{label}</span> : null}
+      {rightSlot}
+    </button>
+  );
+};
+
+===== src/components/atoms/Code/Code.tsx =====
+import { useCallback, useRef, type ReactNode } from 'react';
+import styles from './Code.module.css';
+
+export type CodeProps = {
+  children: ReactNode;
+  block?: boolean;
+  language?: string;
+  copyable?: boolean;
+  className?: string;
+};
+
+export const Code = ({
+  children,
+  block = false,
+  language,
+  copyable = false,
+  className,
+}: CodeProps) => {
+  const preRef = useRef<HTMLPreElement>(null);
+
+  const handleCopy = useCallback(async () => {
+    const el = preRef.current;
+    if (!el) return;
+    const text = el.innerText ?? '';
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      /* clipboard may be unavailable */
+    }
+  }, []);
+
+  if (!block) {
+    return (
+      <code className={[styles.inline, className ?? ''].filter(Boolean).join(' ')}>
+        {children}
+      </code>
+    );
+  }
+
+  const showChrome = Boolean(language) || copyable;
+  const preClass = [styles.pre, showChrome ? styles.preHasChrome : '']
+    .filter(Boolean)
+    .join(' ');
+
+  return (
+    <div className={[styles.blockWrapper, className ?? ''].filter(Boolean).join(' ')}>
+      {language ? <span className={styles.language}>{language}</span> : null}
+      {copyable ? (
+        <button
+          type="button"
+          className={styles.copyBtn}
+          onClick={handleCopy}
+          aria-label="Copy code to clipboard"
+        >
+          Copy
+        </button>
+      ) : null}
+      <pre className={preClass} ref={preRef}>
+        <code className={styles.blockCode}>{children}</code>
+      </pre>
+    </div>
+  );
+};
+
+===== src/components/atoms/Divider/Divider.tsx =====
+import styles from './Divider.module.css';
+
+export type DividerProps = {
+  orientation?: 'horizontal' | 'vertical';
+  label?: string;
+  variant?: 'default' | 'subtle' | 'strong';
+  spacing?: 'sm' | 'md' | 'lg';
+};
+
+const variantClassMap = {
+  default: styles.variantDefault,
+  subtle: styles.variantSubtle,
+  strong: styles.variantStrong,
+} as const;
+
+const spacingClassMap = {
+  sm: styles.spacingSm,
+  md: styles.spacingMd,
+  lg: styles.spacingLg,
+} as const;
+
+const labelSpacingClassMap = {
+  sm: styles.labelSpacingSm,
+  md: styles.labelSpacingMd,
+  lg: styles.labelSpacingLg,
+} as const;
+
+export const Divider = ({
+  orientation = 'horizontal',
+  label,
+  variant = 'default',
+  spacing = 'md',
+}: DividerProps) => {
+  const variantClass = variantClassMap[variant];
+  const spacingClass = spacingClassMap[spacing];
+
+  if (label != null && label.length > 0 && orientation === 'horizontal') {
+    const wrapClass = [
+      styles.withLabel,
+      labelSpacingClassMap[spacing],
+    ].join(' ');
+    const lineClass = [styles.line, variantClass].join(' ');
+    return (
+      <div className={wrapClass} role="separator" aria-label={label}>
+        <hr className={lineClass} />
+        <span className={styles.label}>{label}</span>
+        <hr className={lineClass} />
+      </div>
+    );
+  }
+
+  const axisClass =
+    orientation === 'horizontal' ? styles.horizontal : styles.vertical;
+
+  const rootClass = [
+    styles.root,
+    axisClass,
+    variantClass,
+    spacingClass,
+  ].join(' ');
+
+  return <hr className={rootClass} />;
+};
+
+===== src/components/atoms/Field/Field.tsx =====
+import type { InputHTMLAttributes, ReactNode } from 'react';
+import styles from './Field.module.css';
+
+export type FieldProps = {
+  placeholder?: string;
+  value?: string;
+  onChange?: (value: string) => void;
+  status?: 'default' | 'hover' | 'focus' | 'error' | 'disabled';
+  iconLeft?: ReactNode;
+  iconRight?: ReactNode;
+} & Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  'value' | 'onChange' | 'disabled' | 'size'
+>;
+
+export const Field = ({
+  placeholder,
+  value,
+  onChange,
+  status = 'default',
+  iconLeft,
+  iconRight,
+  className,
+  ...inputRest
+}: FieldProps) => {
+  const isDisabled = status === 'disabled';
+  const interactive = status === 'default';
+  const forceHover = status === 'hover';
+  const forceFocus = status === 'focus';
+  const isError = status === 'error';
+
+  const rootClass = [
+    styles.root,
+    interactive ? styles.interactive : '',
+    forceHover ? styles.forceHover : '',
+    forceFocus ? styles.forceFocus : '',
+    isError ? styles.statusError : '',
+    isDisabled ? styles.statusDisabled : '',
+    className ?? '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  return (
+    <div className={rootClass}>
+      {iconLeft != null ? (
+        <span className={styles.iconSlot}>{iconLeft}</span>
+      ) : null}
+      <input
+        {...inputRest}
+        className={styles.input}
+        placeholder={placeholder}
+        value={value}
+        disabled={isDisabled}
+        aria-invalid={isError || undefined}
+        onChange={(e) => onChange?.(e.target.value)}
+      />
+      {iconRight != null ? (
+        <span className={styles.iconSlot}>{iconRight}</span>
+      ) : null}
+    </div>
+  );
+};
+
+===== src/components/atoms/Heading/Heading.tsx =====
+import type { ReactNode } from 'react';
+import styles from './Heading.module.css';
+
+export type HeadingProps = {
+  level?: 1 | 2 | 3 | 4 | 5 | 6;
+  children: ReactNode;
+  color?: 'primary' | 'secondary' | 'tertiary' | 'default' | 'info' | 'success';
+  weight?: 'regular' | 'medium' | 'semibold' | 'bold';
+  align?: 'left' | 'center' | 'right';
+  className?: string;
+};
+
+const levelClassMap = {
+  1: styles.level1,
+  2: styles.level2,
+  3: styles.level3,
+  4: styles.level4,
+  5: styles.level5,
+  6: styles.level6,
+} as const;
+
+const colorClassMap = {
+  primary: styles.colorPrimary,
+  secondary: styles.colorSecondary,
+  tertiary: styles.colorTertiary,
+  default: styles.colorDefault,
+  info: styles.colorInfo,
+  success: styles.colorSuccess,
+} as const;
+
+const weightClassMap = {
+  regular: styles.weightRegular,
+  medium: styles.weightMedium,
+  semibold: styles.weightSemibold,
+  bold: styles.weightBold,
+} as const;
+
+const alignClassMap = {
+  left: styles.alignLeft,
+  center: styles.alignCenter,
+  right: styles.alignRight,
+} as const;
+
+const tagMap = {
+  1: 'h1',
+  2: 'h2',
+  3: 'h3',
+  4: 'h4',
+  5: 'h5',
+  6: 'h6',
+} as const;
+
+export const Heading = ({
+  level = 2,
+  children,
+  color = 'default',
+  weight = 'bold',
+  align = 'left',
+  className,
+}: HeadingProps) => {
+  const Tag = tagMap[level];
+  const rootClass = [
+    styles.heading,
+    levelClassMap[level],
+    colorClassMap[color],
+    weightClassMap[weight],
+    alignClassMap[align],
+    className ?? '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  return <Tag className={rootClass}>{children}</Tag>;
+};
+
+===== src/components/atoms/Image/Image.tsx =====
+import {
+  useEffect,
+  useState,
+  type CSSProperties,
+} from 'react';
+import { Skeleton } from '../Skeleton/Skeleton';
+import styles from './Image.module.css';
+
+export type ImageProps = {
+  src: string;
+  alt: string;
+  caption?: string;
+  width?: string;
+  height?: string;
+  objectFit?: 'cover' | 'contain' | 'fill';
+  rounded?: 'none' | 'sm' | 'md' | 'lg' | 'full';
+  loading?: 'lazy' | 'eager';
+  fallback?: string;
+  aspectRatio?: '1/1' | '16/9' | '4/3' | '3/2';
+};
+
+const roundedClassMap = {
+  none: styles.roundedNone,
+  sm: styles.roundedSm,
+  md: styles.roundedMd,
+  lg: styles.roundedLg,
+  full: styles.roundedFull,
+} as const;
+
+export const Image = ({
+  src,
+  alt,
+  caption,
+  width,
+  height,
+  objectFit = 'cover',
+  rounded = 'md',
+  loading = 'lazy',
+  fallback,
+  aspectRatio,
+}: ImageProps) => {
+  const [srcUsed, setSrcUsed] = useState(src);
+  const [phase, setPhase] = useState<'loading' | 'ready' | 'error'>('loading');
+
+  useEffect(() => {
+    setSrcUsed(src);
+    setPhase('loading');
+  }, [src]);
+
+  const wrapperStyle: CSSProperties = {
+    width,
+    height,
+    ...(aspectRatio != null ? { aspectRatio } : {}),
+  };
+
+  const handleLoad = () => {
+    setPhase('ready');
+  };
+
+  const handleError = () => {
+    if (fallback != null && srcUsed !== fallback) {
+      setSrcUsed(fallback);
+      setPhase('loading');
+      return;
+    }
+    setPhase('error');
+  };
+
+  const roundedClass = roundedClassMap[rounded];
+
+  return (
+    <figure className={styles.figure}>
+      <div className={[styles.wrapper, roundedClass].join(' ')} style={wrapperStyle}>
+        {phase === 'loading' ? (
+          <div className={styles.skeletonLayer} aria-hidden>
+            <Skeleton variant="rectangle" animated width="100%" height="100%" />
+          </div>
+        ) : null}
+        {phase === 'error' ? (
+          <div className={styles.errorWrap}>
+            <span className={styles.errorIcon} aria-hidden />
+          </div>
+        ) : (
+          <img
+            className={[
+              styles.img,
+              phase === 'ready' ? styles.imgVisible : styles.imgHidden,
+            ].join(' ')}
+            src={srcUsed}
+            alt={alt}
+            loading={loading}
+            style={{ objectFit }}
+            onLoad={handleLoad}
+            onError={handleError}
+            decoding="async"
+          />
+        )}
+      </div>
+      {caption != null ? (
+        <figcaption className={styles.caption}>{caption}</figcaption>
+      ) : null}
+    </figure>
+  );
+};
+
+===== src/components/atoms/Label/Label.tsx =====
+import type { LabelHTMLAttributes } from 'react';
+import styles from './Label.module.css';
+
+export type LabelProps = {
+  text: string;
+  required?: boolean;
+  hint?: boolean;
+} & Omit<LabelHTMLAttributes<HTMLLabelElement>, 'children'>;
+
+export const Label = ({
+  text,
+  required = false,
+  hint = false,
+  className,
+  ...rest
+}: LabelProps) => {
+  const rootClass = [styles.root, className ?? ''].filter(Boolean).join(' ');
+
+  return (
+    <label className={rootClass} {...rest}>
+      {required ? (
+        <span className={styles.asterisk} aria-hidden="true">
+          *
+        </span>
+      ) : null}
+      <span className={styles.text}>{text}</span>
+      {hint ? (
+        <span className={styles.hintIcon} role="img" aria-label="Help">
+          ?
+        </span>
+      ) : null}
+    </label>
+  );
+};
+
+===== src/components/atoms/Link/Link.tsx =====
+import type { AnchorHTMLAttributes, ReactNode } from 'react';
+import styles from './Link.module.css';
+
+export type LinkProps = {
+  href: string;
+  children: ReactNode;
+  variant?: 'default' | 'primary';
+  underline?: 'always' | 'hover' | 'never';
+  disabled?: boolean;
+  external?: boolean;
+} & Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href' | 'children'>;
+
+export const Link = ({
+  href,
+  children,
+  variant = 'default',
+  underline = 'hover',
+  disabled = false,
+  external = false,
+  className,
+  ...anchorRest
+}: LinkProps) => {
+  const variantClass =
+    variant === 'primary' ? styles.variantPrimary : styles.variantDefault;
+
+  const underlineClass =
+    underline === 'always'
+      ? styles.underlineAlways
+      : underline === 'never'
+        ? styles.underlineNever
+        : styles.underlineHover;
+
+  const rootClass = [
+    styles.root,
+    variantClass,
+    underlineClass,
+    disabled ? styles.disabled : '',
+    className ?? '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  if (disabled) {
+    return (
+      <span className={rootClass} aria-disabled="true">
+        {children}
+      </span>
+    );
+  }
+
+  return (
+    <a
+      {...anchorRest}
+      className={rootClass}
+      href={href}
+      target={external ? '_blank' : anchorRest.target}
+      rel={external ? 'noopener noreferrer' : anchorRest.rel}
+    >
+      {children}
+    </a>
+  );
+};
+
+===== src/components/atoms/Loader/Loader.tsx =====
+import styles from './Loader.module.css';
+
+export type LoaderProps = {
+  size?: 'sm' | 'md' | 'lg';
+  variant?: 'primary' | 'success' | 'info';
+  label?: string;
+};
+
+const sizeClassMap = {
+  sm: styles.sizeSm,
+  md: styles.sizeMd,
+  lg: styles.sizeLg,
+} as const;
+
+const variantClassMap = {
+  primary: styles.variantPrimary,
+  success: styles.variantSuccess,
+  info: styles.variantInfo,
+} as const;
+
+export const Loader = ({
+  size = 'md',
+  variant = 'primary',
+  label,
+}: LoaderProps) => {
+  const spinnerClass = [
+    styles.spinner,
+    sizeClassMap[size],
+    variantClassMap[variant],
+  ].join(' ');
+
+  return (
+    <div className={styles.root} role="status" aria-live="polite">
+      {label != null ? (
+        <span className={styles.visuallyHidden}>{label}</span>
+      ) : null}
+      <span className={spinnerClass} aria-hidden="true" />
+    </div>
+  );
+};
+
+===== src/components/atoms/MapPin/MapPin.tsx =====
+import type { ReactNode } from 'react';
+import styles from './MapPin.module.css';
+
+export type MapPinProps = {
+  size?: 'sm' | 'md' | 'lg';
+  color?: 'primary' | 'success' | 'error' | 'info' | 'warning';
+  label?: string;
+  active?: boolean;
+  onClick?: () => void;
+};
+
+const sizeClassMap = {
+  sm: styles.sizeSm,
+  md: styles.sizeMd,
+  lg: styles.sizeLg,
+} as const;
+
+const colorClassMap = {
+  primary: styles.colorPrimary,
+  success: styles.colorSuccess,
+  error: styles.colorError,
+  info: styles.colorInfo,
+  warning: styles.colorWarning,
+} as const;
+
+export const MapPin = ({
+  size = 'md',
+  color = 'primary',
+  label,
+  active = false,
+  onClick,
+}: MapPinProps) => {
+  const interactive = onClick != null;
+  const rootClass = [
+    styles.root,
+    interactive ? styles.interactive : '',
+    active ? styles.active : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const pinClass = [
+    styles.pin,
+    sizeClassMap[size],
+    colorClassMap[color],
+  ].join(' ');
+
+  const body: ReactNode = (
+    <>
+      <div className={styles.pinWrap}>
+        <div className={pinClass}>
+          <span className={styles.dot} aria-hidden />
+        </div>
+      </div>
+      {label != null ? <span className={styles.label}>{label}</span> : null}
+    </>
+  );
+
+  if (interactive) {
+    return (
+      <button
+        type="button"
+        className={rootClass}
+        onClick={onClick}
+        aria-pressed={active || undefined}
+      >
+        {body}
+      </button>
+    );
+  }
+
+  return (
+    <span
+      className={rootClass}
+      role="img"
+      aria-label={label ?? 'Location marker'}
+    >
+      {body}
+    </span>
+  );
+};
+
+===== src/components/atoms/Rating/Rating.tsx =====
+import { useCallback, useState } from 'react';
+import styles from './Rating.module.css';
+
+export type RatingProps = {
+  value?: number;
+  max?: number;
+  onChange?: (value: number) => void;
+  readonly?: boolean;
+  size?: 'sm' | 'md' | 'lg';
+  showValue?: boolean;
+  className?: string;
+};
+
+const sizeClassMap = {
+  sm: styles.sizeSm,
+  md: styles.sizeMd,
+  lg: styles.sizeLg,
+} as const;
+
+export const Rating = ({
+  value: valueProp = 0,
+  max = 5,
+  onChange,
+  readonly = false,
+  size = 'md',
+  showValue = false,
+  className,
+}: RatingProps) => {
+  const [internalValue, setInternalValue] = useState(valueProp);
+  const [hover, setHover] = useState<number | null>(null);
+
+  const isControlled = onChange !== undefined;
+  const rawValue = isControlled ? valueProp : internalValue;
+  const displayRounded = Math.min(
+    max,
+    Math.max(0, Math.round(Number(rawValue))),
+  );
+
+  const filledCount =
+    !readonly && hover !== null ? hover : displayRounded;
+
+  const setValue = useCallback(
+    (next: number) => {
+      const clamped = Math.min(max, Math.max(0, next));
+      if (!isControlled) {
+        setInternalValue(clamped);
+      }
+      onChange?.(clamped);
+    },
+    [isControlled, max, onChange],
+  );
+
+  const rootClass = [styles.root, sizeClassMap[size], className ?? '']
+    .filter(Boolean)
+    .join(' ');
+
+  const stars = Array.from({ length: max }, (_, i) => i + 1);
+
+  return (
+    <div
+      className={rootClass}
+      role="group"
+      aria-label={
+        readonly
+          ? `Rating: ${displayRounded} out of ${max} stars`
+          : 'Star rating'
+      }
+      onMouseLeave={readonly ? undefined : () => setHover(null)}
+    >
+      <ul className={styles.stars}>
+        {stars.map((i) => {
+          const filled = i <= filledCount;
+          const isHoverPreview =
+            !readonly && hover !== null && i <= hover;
+          const starClass = [
+            styles.star,
+            filled
+              ? isHoverPreview
+                ? styles.filledHover
+                : styles.filled
+              : styles.empty,
+          ].join(' ');
+
+          const char = filled ? '★' : '☆';
+
+          if (readonly) {
+            return (
+              <li key={i}>
+                <span className={starClass} aria-hidden>
+                  {char}
+                </span>
+              </li>
+            );
+          }
+
+          return (
+            <li key={i}>
+              <button
+                type="button"
+                className={styles.starBtn}
+                aria-label={`Rate ${i} out of ${max}`}
+                aria-pressed={i <= displayRounded}
+                onMouseEnter={() => setHover(i)}
+                onFocus={() => setHover(i)}
+                onBlur={() => setHover(null)}
+                onClick={() => setValue(i)}
+              >
+                <span className={starClass} aria-hidden>
+                  {char}
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      {showValue ? (
+        <span className={styles.valueLabel}>
+          {Number(rawValue).toFixed(1)} / {max}
+        </span>
+      ) : null}
+    </div>
+  );
+};
+
+===== src/components/atoms/Skeleton/Skeleton.tsx =====
+import type { CSSProperties } from 'react';
+import styles from './Skeleton.module.css';
+
+export type SkeletonProps = {
+  width?: string;
+  height?: string;
+  variant?: 'text' | 'circle' | 'rectangle' | 'card';
+  lines?: number;
+  animated?: boolean;
+};
+
+const variantClassMap = {
+  text: styles.text,
+  circle: styles.circle,
+  rectangle: styles.rectangle,
+  card: styles.card,
+} as const;
+
+export const Skeleton = ({
+  width,
+  height,
+  variant = 'text',
+  lines = 1,
+  animated = true,
+}: SkeletonProps) => {
+  const blockClass = [
+    styles.base,
+    variantClassMap[variant],
+    animated ? styles.animated : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const style: CSSProperties = {};
+  if (width != null) style.width = width;
+  if (height != null) style.height = height;
+
+  if (variant === 'text' && lines > 1) {
+    return (
+      <div className={styles.lines}>
+        {Array.from({ length: lines }, (_, i) => (
+          <span
+            key={i}
+            className={[
+              blockClass,
+              i === lines - 1 ? styles.lastLine : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
+            style={i === lines - 1 ? { ...style } : style}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  return <span className={blockClass} style={style} />;
+};
+
+===== src/components/atoms/Tag/Tag.tsx =====
+import styles from './Tag.module.css';
+
+export type TagProps = {
+  label: string;
+  onRemove?: () => void;
+  variant?:
+    | 'default'
+    | 'primary'
+    | 'success'
+    | 'warning'
+    | 'error'
+    | 'info'
+    | 'neutral';
+  disabled?: boolean;
+};
+
+const variantClassMap = {
+  default: styles.variantDefault,
+  primary: styles.variantPrimary,
+  success: styles.variantSuccess,
+  warning: styles.variantWarning,
+  error: styles.variantError,
+  info: styles.variantInfo,
+  neutral: styles.variantNeutral,
+} as const;
+
+export const Tag = ({
+  label,
+  onRemove,
+  variant = 'default',
+  disabled = false,
+}: TagProps) => {
+  const rootClass = [
+    styles.root,
+    variantClassMap[variant],
+    disabled ? styles.disabled : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  return (
+    <span className={rootClass}>
+      {label}
+      {onRemove != null ? (
+        <button
+          type="button"
+          className={styles.remove}
+          onClick={disabled ? undefined : onRemove}
+          disabled={disabled}
+          aria-label={`Remove ${label}`}
+        >
+          ×
+        </button>
+      ) : null}
+    </span>
+  );
+};
+
+===== src/components/atoms/Text/Text.tsx =====
+import type { ReactNode } from 'react';
+import styles from './Text.module.css';
+
+export type TextProps = {
+  variant?:
+    | 'body-xl'
+    | 'body-lg'
+    | 'body-md'
+    | 'body-sm'
+    | 'body-xs'
+    | 'caption'
+    | 'label';
+  children: ReactNode;
+  color?:
+    | 'default'
+    | 'caption'
+    | 'placeholder'
+    | 'primary'
+    | 'success'
+    | 'error'
+    | 'warning'
+    | 'info'
+    | 'disabled';
+  weight?: 'regular' | 'medium' | 'semibold' | 'bold';
+  align?: 'left' | 'center' | 'right';
+  truncate?: boolean;
+  as?: 'p' | 'span' | 'div' | 'label';
+  className?: string;
+  id?: string;
+  htmlFor?: string;
+};
+
+const variantClassMap = {
+  'body-xl': styles.variantBodyXl,
+  'body-lg': styles.variantBodyLg,
+  'body-md': styles.variantBodyMd,
+  'body-sm': styles.variantBodySm,
+  'body-xs': styles.variantBodyXs,
+  caption: styles.variantCaption,
+  label: styles.variantLabel,
+} as const;
+
+const colorClassMap = {
+  default: styles.colorDefault,
+  caption: styles.colorCaption,
+  placeholder: styles.colorPlaceholder,
+  primary: styles.colorPrimary,
+  success: styles.colorSuccess,
+  error: styles.colorError,
+  warning: styles.colorWarning,
+  info: styles.colorInfo,
+  disabled: styles.colorDisabled,
+} as const;
+
+const weightClassMap = {
+  regular: styles.weightRegular,
+  medium: styles.weightMedium,
+  semibold: styles.weightSemibold,
+  bold: styles.weightBold,
+} as const;
+
+const alignClassMap = {
+  left: styles.alignLeft,
+  center: styles.alignCenter,
+  right: styles.alignRight,
+} as const;
+
+export const Text = ({
+  variant = 'body-md',
+  children,
+  color = 'default',
+  weight: weightProp,
+  align = 'left',
+  truncate = false,
+  as: Component = 'p',
+  className,
+  id,
+  htmlFor,
+}: TextProps) => {
+  const resolvedWeight =
+    weightProp ?? (variant === 'label' ? 'medium' : 'regular');
+  const resolvedColor = variant === 'caption' && color === 'default' ? 'caption' : color;
+  const colorClass = colorClassMap[resolvedColor];
+
+  const rootClass = [
+    styles.root,
+    variantClassMap[variant],
+    colorClass,
+    weightClassMap[resolvedWeight],
+    alignClassMap[align],
+    truncate ? styles.truncate : '',
+    className ?? '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  return (
+    <Component className={rootClass} id={id} htmlFor={htmlFor}>
+      {children}
+    </Component>
+  );
+};
+
+===== src/components/molecules/Breadcrumb/Breadcrumb.tsx =====
+import styles from './Breadcrumb.module.css';
+
+export type BreadcrumbItem = {
+  label: string;
+  href?: string;
+};
+
+export type BreadcrumbProps = {
+  items: BreadcrumbItem[];
+  separator?: '/' | '>';
+};
+
+export const Breadcrumb = ({
+  items,
+  separator = '/',
+}: BreadcrumbProps) => {
+  const lastIndex = items.length - 1;
+
+  return (
+    <nav className={styles.root} aria-label="Breadcrumb">
+      <ol className={styles.list}>
+        {items.map((item, index) => {
+          const isLast = index === lastIndex;
+          const showSep = index < lastIndex;
+
+          return (
+            <li key={`${item.label}-${index}`} className={styles.item}>
+              {isLast ? (
+                <span className={styles.current} aria-current="page">
+                  {item.label}
+                </span>
+              ) : item.href != null ? (
+                <a className={styles.link} href={item.href}>
+                  {item.label}
+                </a>
+              ) : (
+                <span className={styles.plain}>{item.label}</span>
+              )}
+              {showSep ? (
+                <span className={styles.separator} aria-hidden="true">
+                  {separator}
+                </span>
+              ) : null}
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
+  );
+};
+
+===== src/components/molecules/ButtonGroup/ButtonGroup.tsx =====
+import { useMemo, useState } from 'react';
+import styles from './ButtonGroup.module.css';
+
+export type ButtonGroupItemProps = {
+  label: string;
+  active?: boolean;
+  onClick?: () => void;
+  disabled?: boolean;
+};
+
+export type ButtonGroupProps = {
+  items: ButtonGroupItemProps[];
+  connected?: boolean;
+};
+
+export const ButtonGroup = ({
+  items,
+  connected = false,
+}: ButtonGroupProps) => {
+  const hasControlledActive = useMemo(
+    () => items.some((item) => item.active === true),
+    [items],
+  );
+
+  const controlledIndex = items.findIndex((item) => item.active === true);
+
+  const [internalIndex, setInternalIndex] = useState(() => {
+    const i = items.findIndex((item) => item.active === true);
+    return i >= 0 ? i : 0;
+  });
+
+  const activeIndex = hasControlledActive
+    ? Math.max(0, controlledIndex)
+    : internalIndex;
+
+  const rootClass = [
+    styles.root,
+    connected ? styles.connected : styles.separated,
+  ].join(' ');
+
+  return (
+    <div className={rootClass} role="group">
+      {items.map((item, index) => {
+        const isActive = index === activeIndex;
+        const handleClick = () => {
+          item.onClick?.();
+          if (!hasControlledActive) {
+            setInternalIndex(index);
+          }
+        };
+
+        const itemClass = [
+          styles.item,
+          isActive ? styles.active : styles.inactive,
+          item.disabled ? styles.disabled : '',
+        ]
+          .filter(Boolean)
+          .join(' ');
+
+        return (
+          <button
+            key={`${item.label}-${index}`}
+            type="button"
+            className={itemClass}
+            onClick={handleClick}
+            disabled={item.disabled}
+            aria-pressed={isActive}
+          >
+            {item.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+===== src/components/molecules/Checkbox/Checkbox.tsx =====
+import { useId, useState } from 'react';
+import type { ChangeEvent } from 'react';
+import styles from './Checkbox.module.css';
+
+export type CheckboxProps = {
+  label: string;
+  checked?: boolean;
+  onChange?: (checked: boolean) => void;
+  disabled?: boolean;
+  hint?: string;
+  error?: string;
+  defaultChecked?: boolean;
+};
+
+export const Checkbox = ({
+  label,
+  checked,
+  onChange,
+  disabled = false,
+  hint,
+  error,
+  defaultChecked = false,
+}: CheckboxProps) => {
+  const isControlled = checked !== undefined;
+  const [internalChecked, setInternalChecked] = useState(
+    () => defaultChecked ?? false,
+  );
+  const isChecked = isControlled ? checked : internalChecked;
+
+  const hintId = useId();
+  const errorId = useId();
+
+  const errorMessage = error?.trim() ?? '';
+  const showError = Boolean(errorMessage);
+  const showHint = Boolean(hint) && !showError;
+
+  const describedBy =
+    showError ? errorId : showHint ? hintId : undefined;
+
+  const handleNativeChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (disabled) return;
+    const next = e.target.checked;
+    if (!isControlled) {
+      setInternalChecked(next);
+    }
+    onChange?.(next);
+  };
+
+  const wrapperClass = [
+    styles.wrapper,
+    disabled ? styles.disabled : '',
+    isChecked ? styles.checked : '',
+    showError ? styles.error : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const rootClass = [styles.root, disabled ? styles.disabled : '']
+    .filter(Boolean)
+    .join(' ');
+
+  const boxClass = [styles.box, isChecked ? styles.checked : '']
+    .filter(Boolean)
+    .join(' ');
+
+  return (
+    <div className={wrapperClass}>
+      <label className={rootClass}>
+        <span className={styles.boxWrap}>
+          <input
+            type="checkbox"
+            className={styles.native}
+            checked={isChecked}
+            onChange={handleNativeChange}
+            disabled={disabled}
+            aria-invalid={showError || undefined}
+            aria-describedby={describedBy}
+          />
+          <span className={boxClass} aria-hidden="true">
+            {isChecked ? <span className={styles.check} /> : null}
+          </span>
+        </span>
+        <span className={styles.labelText}>{label}</span>
+      </label>
+      {showHint ? (
+        <p id={hintId} className={styles.hint}>
+          {hint}
+        </p>
+      ) : null}
+      {showError ? (
+        <p id={errorId} className={styles.error} role="alert">
+          {errorMessage}
+        </p>
+      ) : null}
+    </div>
+  );
+};
+
+===== src/components/molecules/ContextMenu/ContextMenu.tsx =====
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
+import styles from './ContextMenu.module.css';
+
+export type ContextMenuItem = {
+  label?: string;
+  icon?: ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+  destructive?: boolean;
+  divider?: boolean;
+};
+
+export type ContextMenuProps = {
+  items: ContextMenuItem[];
+  trigger: ReactNode;
+  position?: 'bottom-left' | 'bottom-right' | 'top-left' | 'top-right';
+};
+
+const positionClassMap = {
+  'bottom-left': styles.posBottomLeft,
+  'bottom-right': styles.posBottomRight,
+  'top-left': styles.posTopLeft,
+  'top-right': styles.posTopRight,
+} as const;
+
+export const ContextMenu = ({
+  items,
+  trigger,
+  position = 'bottom-left',
+}: ContextMenuProps) => {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (!rootRef.current?.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [open]);
+
+  const menuClass = [
+    styles.menu,
+    positionClassMap[position],
+    open ? styles.menuOpen : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  return (
+    <div
+      ref={rootRef}
+      className={styles.root}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        setOpen(true);
+      }}
+    >
+      <div
+        className={styles.trigger}
+        onClick={() => setOpen((o) => !o)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setOpen((o) => !o);
+          }
+        }}
+        role="button"
+        tabIndex={0}
+      >
+        {trigger}
+      </div>
+      <ul className={menuClass} role="menu">
+        {items.map((item, index) => {
+          if (item.divider) {
+            return (
+              <li key={`div-${index}`} role="presentation">
+                <div className={styles.divider} aria-hidden />
+              </li>
+            );
+          }
+
+          const itemClass = [
+            styles.item,
+            item.disabled ? styles.itemDisabled : '',
+            item.destructive ? styles.itemDestructive : '',
+          ]
+            .filter(Boolean)
+            .join(' ');
+
+          return (
+            <li key={`${item.label ?? 'item'}-${index}`} role="none">
+              <button
+                type="button"
+                role="menuitem"
+                className={itemClass}
+                disabled={item.disabled}
+                onClick={() => {
+                  if (item.disabled) return;
+                  item.onClick?.();
+                  setOpen(false);
+                }}
+              >
+                {item.icon != null ? (
+                  <span className={styles.iconSlot} aria-hidden>
+                    {item.icon}
+                  </span>
+                ) : null}
+                <span>{item.label}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+};
+
+===== src/components/molecules/DatePicker/DatePicker.tsx =====
+import { useEffect, useId, useRef, useState } from 'react';
+import { Field } from '../../atoms/Field/Field';
+import { Label } from '../../atoms/Label/Label';
+import styles from './DatePicker.module.css';
+
+export type DatePickerProps = {
+  value?: Date;
+  onChange?: (date: Date) => void;
+  placeholder?: string;
+  label?: string;
+  hint?: string;
+  disabled?: boolean;
+  minDate?: Date;
+  maxDate?: Date;
+};
+
+function startOfDay(d: Date): Date {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
+
+function sameDay(a: Date, b: Date): boolean {
+  return startOfDay(a).getTime() === startOfDay(b).getTime();
+}
+
+function beforeDay(a: Date, b: Date): boolean {
+  return startOfDay(a) < startOfDay(b);
+}
+
+function afterDay(a: Date, b: Date): boolean {
+  return startOfDay(a) > startOfDay(b);
+}
+
+function formatDisplay(d: Date): string {
+  return d.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+function calendarCells(year: number, month: number): { date: Date; inMonth: boolean }[] {
+  const first = new Date(year, month, 1);
+  const mondayIndex = (first.getDay() + 6) % 7;
+  const start = new Date(first);
+  start.setDate(first.getDate() - mondayIndex);
+  const cells: { date: Date; inMonth: boolean }[] = [];
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    cells.push({
+      date: d,
+      inMonth: d.getMonth() === month,
+    });
+  }
+  return cells;
+}
+
+const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+export const DatePicker = ({
+  value,
+  onChange,
+  placeholder = 'Select date',
+  label,
+  hint,
+  disabled = false,
+  minDate,
+  maxDate,
+}: DatePickerProps) => {
+  const baseId = useId();
+  const fieldId = `datepicker-${baseId}`;
+  const hintId = `${fieldId}-hint`;
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const initialMonth = value ?? new Date();
+  const [viewYear, setViewYear] = useState(initialMonth.getFullYear());
+  const [viewMonth, setViewMonth] = useState(initialMonth.getMonth());
+
+  useEffect(() => {
+    if (value) {
+      setViewYear(value.getFullYear());
+      setViewMonth(value.getMonth());
+    }
+  }, [value]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (!wrapRef.current?.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [open]);
+
+  const today = startOfDay(new Date());
+  const cells = calendarCells(viewYear, viewMonth);
+  const monthTitle = new Date(viewYear, viewMonth, 1).toLocaleDateString(
+    undefined,
+    { month: 'long', year: 'numeric' },
+  );
+
+  const minD = minDate ? startOfDay(minDate) : null;
+  const maxD = maxDate ? startOfDay(maxDate) : null;
+
+  const dayDisabled = (d: Date) => {
+    const sd = startOfDay(d);
+    if (minD && beforeDay(sd, minD)) return true;
+    if (maxD && afterDay(sd, maxD)) return true;
+    return false;
+  };
+
+  const prevMonth = () => {
+    setViewMonth((m) => {
+      if (m === 0) {
+        setViewYear((y) => y - 1);
+        return 11;
+      }
+      return m - 1;
+    });
+  };
+
+  const nextMonth = () => {
+    setViewMonth((m) => {
+      if (m === 11) {
+        setViewYear((y) => y + 1);
+        return 0;
+      }
+      return m + 1;
+    });
+  };
+
+  const fieldStatus = disabled ? 'disabled' : 'default';
+
+  return (
+    <div ref={wrapRef} className={styles.root}>
+      <div className={styles.stack}>
+        {label != null ? (
+          <Label htmlFor={fieldId} text={label} required={false} hint={false} />
+        ) : null}
+        <div
+          onClick={() => {
+            if (!disabled) setOpen((o) => !o);
+          }}
+          onKeyDown={(e) => {
+            if (disabled) return;
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setOpen((o) => !o);
+            }
+          }}
+          role="presentation"
+        >
+          <Field
+            id={fieldId}
+            placeholder={placeholder}
+            value={value != null ? formatDisplay(value) : ''}
+            onChange={() => {}}
+            readOnly
+            status={fieldStatus}
+            iconRight={<span className={styles.calIcon} aria-hidden />}
+            aria-expanded={open}
+            aria-haspopup="dialog"
+            aria-describedby={hint != null ? hintId : undefined}
+          />
+        </div>
+        {hint != null ? (
+          <p id={hintId} className={styles.hint}>
+            {hint}
+          </p>
+        ) : null}
+      </div>
+
+      {open && !disabled ? (
+        <div className={styles.popover} role="dialog" aria-label="Choose date">
+          <div className={styles.header}>
+            <button
+              type="button"
+              className={styles.navBtn}
+              aria-label="Previous month"
+              onClick={(e) => {
+                e.stopPropagation();
+                prevMonth();
+              }}
+            >
+              ←
+            </button>
+            <p className={styles.monthLabel}>{monthTitle}</p>
+            <button
+              type="button"
+              className={styles.navBtn}
+              aria-label="Next month"
+              onClick={(e) => {
+                e.stopPropagation();
+                nextMonth();
+              }}
+            >
+              →
+            </button>
+          </div>
+          <div className={styles.weekdays}>
+            {WEEKDAYS.map((w) => (
+              <span key={w} className={styles.weekday}>
+                {w}
+              </span>
+            ))}
+          </div>
+          <div className={styles.grid}>
+            {cells.map(({ date: d, inMonth }) => {
+              const dis = dayDisabled(d);
+              const sel = value != null && sameDay(d, value);
+              const isToday = sameDay(d, today);
+              const dayClass = [
+                styles.dayBtn,
+                !inMonth ? styles.dayOtherMonth : '',
+                isToday ? styles.dayToday : '',
+                sel ? styles.daySelected : '',
+                dis ? styles.dayDisabled : '',
+              ]
+                .filter(Boolean)
+                .join(' ');
+
+              return (
+                <button
+                  key={`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`}
+                  type="button"
+                  className={dayClass}
+                  disabled={dis}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (dis) return;
+                    onChange?.(startOfDay(d));
+                    setOpen(false);
+                  }}
+                >
+                  {d.getDate()}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
+===== src/components/molecules/Dropdown/Dropdown.tsx =====
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from 'react';
+import { Label } from '../../atoms/Label/Label';
+import styles from './Dropdown.module.css';
+
+export type DropdownOption = {
+  label: string;
+  value: string;
+  disabled?: boolean;
+};
+
+export type DropdownProps = {
+  options: DropdownOption[];
+  value?: string;
+  onChange?: (value: string) => void;
+  placeholder?: string;
+  label?: string;
+  hint?: string;
+  error?: string;
+  disabled?: boolean;
+  width?: string;
+};
+
+export const Dropdown = ({
+  options,
+  value: valueProp,
+  onChange,
+  placeholder = 'Select…',
+  label,
+  hint,
+  error,
+  disabled = false,
+  width,
+}: DropdownProps) => {
+  const baseId = useId();
+  const triggerId = `dropdown-${baseId}`;
+  const listId = `${triggerId}-list`;
+  const hintId = `${triggerId}-hint`;
+  const errorId = `${triggerId}-error`;
+
+  const isControlled = valueProp !== undefined;
+  const [internalValue, setInternalValue] = useState('');
+  const selectedValue = isControlled ? valueProp! : internalValue;
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  const selectedOption = options.find((o) => o.value === selectedValue);
+  const displayLabel = selectedOption?.label ?? '';
+  const hasError = Boolean(error?.trim());
+  const errorMessage = error?.trim() ?? '';
+
+  const setValue = useCallback(
+    (next: string) => {
+      if (!isControlled) {
+        setInternalValue(next);
+      }
+      onChange?.(next);
+    },
+    [isControlled, onChange],
+  );
+
+  useEffect(() => {
+    if (!open) return;
+    const onMouseDown = (e: MouseEvent) => {
+      const el = rootRef.current;
+      if (el && !el.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onMouseDown);
+    return () => document.removeEventListener('mousedown', onMouseDown);
+  }, [open]);
+
+  const describedBy =
+    hasError && errorMessage ? errorId : hint ? hintId : undefined;
+
+  const triggerClass = [
+    styles.trigger,
+    hasError ? styles.triggerError : '',
+    open && !hasError ? styles.triggerOpen : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const chevronClass = [styles.chevron, open ? styles.chevronOpen : '']
+    .filter(Boolean)
+    .join(' ');
+
+  const listClass = [styles.list, open ? styles.listOpen : '']
+    .filter(Boolean)
+    .join(' ');
+
+  return (
+    <div
+      ref={rootRef}
+      className={styles.root}
+      style={width !== undefined ? { width } : undefined}
+    >
+      {label != null ? (
+        <Label htmlFor={triggerId} text={label} />
+      ) : null}
+      <button
+        id={triggerId}
+        type="button"
+        className={triggerClass}
+        disabled={disabled}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={listId}
+        aria-describedby={describedBy}
+        aria-label={label == null ? placeholder : undefined}
+        onClick={() => !disabled && setOpen((o) => !o)}
+      >
+        <span
+          className={[
+            styles.triggerText,
+            !displayLabel ? styles.placeholder : '',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+        >
+          {displayLabel || placeholder}
+        </span>
+        <span className={chevronClass} aria-hidden="true">
+          ▼
+        </span>
+      </button>
+      <ul
+        id={listId}
+        className={listClass}
+        role="listbox"
+        aria-labelledby={label != null ? triggerId : undefined}
+        aria-hidden={!open}
+      >
+        {options.map((opt) => {
+          const selected = opt.value === selectedValue;
+          const optClass = [
+            styles.option,
+            selected ? styles.optionSelected : '',
+            opt.disabled ? styles.optionDisabled : '',
+          ]
+            .filter(Boolean)
+            .join(' ');
+          return (
+            <li
+              key={opt.value}
+              role="option"
+              aria-selected={selected}
+              aria-disabled={opt.disabled === true}
+              className={optClass}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                if (opt.disabled) return;
+                setValue(opt.value);
+                setOpen(false);
+              }}
+            >
+              {opt.label}
+            </li>
+          );
+        })}
+      </ul>
+      {hint != null && !hasError ? (
+        <p id={hintId} className={styles.hint}>
+          {hint}
+        </p>
+      ) : null}
+      {hasError && errorMessage ? (
+        <p id={errorId} className={styles.error} role="alert">
+          {errorMessage}
+        </p>
+      ) : null}
+    </div>
+  );
+};
+
+===== src/components/molecules/EmptyState/EmptyState.tsx =====
+import type { ReactNode } from 'react';
+import styles from './EmptyState.module.css';
+
+export type EmptyStateProps = {
+  title: string;
+  description?: string;
+  icon?: ReactNode;
+  action?: ReactNode;
+  variant?: 'default' | 'search' | 'error' | 'success';
+};
+
+const fallbackClassMap = {
+  default: styles.fallbackDefault,
+  search: styles.fallbackSearch,
+  error: styles.fallbackError,
+  success: styles.fallbackSuccess,
+} as const;
+
+export const EmptyState = ({
+  title,
+  description,
+  icon,
+  action,
+  variant = 'default',
+}: EmptyStateProps) => {
+  return (
+    <div className={styles.root}>
+      <div className={styles.iconWrap}>
+        {icon != null ? (
+          icon
+        ) : (
+          <span
+            className={[styles.fallbackIcon, fallbackClassMap[variant]].join(
+              ' ',
+            )}
+            aria-hidden
+          />
+        )}
+      </div>
+      <h2 className={styles.title}>{title}</h2>
+      {description != null ? (
+        <p className={styles.description}>{description}</p>
+      ) : null}
+      {action != null ? <div className={styles.action}>{action}</div> : null}
+    </div>
+  );
+};
+
+===== src/components/molecules/FileUpload/FileUpload.tsx =====
+import { useCallback, useId, useRef, useState } from 'react';
+import styles from './FileUpload.module.css';
+
+export type FileUploadProps = {
+  onUpload?: (files: File[]) => void;
+  accept?: string;
+  multiple?: boolean;
+  maxSize?: number;
+  disabled?: boolean;
+  label?: string;
+  hint?: string;
+};
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+export const FileUpload = ({
+  onUpload,
+  accept,
+  multiple = false,
+  maxSize,
+  disabled = false,
+  label,
+  hint,
+}: FileUploadProps) => {
+  const inputId = useId();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [dragOver, setDragOver] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const commitFiles = useCallback(
+    (incoming: File[]) => {
+      if (incoming.length === 0) return;
+
+      const rejected: string[] = [];
+      const accepted: File[] = [];
+
+      for (const f of incoming) {
+        if (maxSize != null && f.size > maxSize) {
+          rejected.push(f.name);
+        } else {
+          accepted.push(f);
+        }
+      }
+
+      if (rejected.length > 0) {
+        setError(
+          rejected.length === 1
+            ? `"${rejected[0]}" exceeds the maximum file size.`
+            : `${rejected.length} file(s) exceed the maximum size.`,
+        );
+      }
+
+      if (accepted.length === 0) {
+        return;
+      }
+
+      setError(null);
+      setFiles((prev) => {
+        const next = multiple ? [...prev, ...accepted] : accepted;
+        onUpload?.(next);
+        return next;
+      });
+    },
+    [maxSize, multiple, onUpload],
+  );
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const list = e.target.files;
+    if (list?.length) {
+      commitFiles(Array.from(list));
+    }
+    e.target.value = '';
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    if (disabled) return;
+    if (e.dataTransfer.files?.length) {
+      commitFiles(Array.from(e.dataTransfer.files));
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!disabled) {
+      e.dataTransfer.dropEffect = 'copy';
+      setDragOver(true);
+    }
+  };
+
+  const handleDragLeave = () => {
+    setDragOver(false);
+  };
+
+  const openPicker = () => {
+    if (!disabled) {
+      inputRef.current?.click();
+    }
+  };
+
+  const removeAt = (index: number) => {
+    const next = files.filter((_, i) => i !== index);
+    setFiles(next);
+    setError(null);
+    onUpload?.(next);
+  };
+
+  const zoneClass = [
+    styles.zone,
+    dragOver ? styles.zoneDrag : '',
+    error != null ? styles.hasError : '',
+    disabled ? styles.disabled : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  return (
+    <div className={styles.root}>
+      {label != null ? (
+        <p className={styles.label} id={`${inputId}-label`}>
+          {label}
+        </p>
+      ) : null}
+      <div
+        className={zoneClass}
+        role="button"
+        tabIndex={disabled ? -1 : 0}
+        aria-disabled={disabled || undefined}
+        aria-labelledby={label != null ? `${inputId}-label` : undefined}
+        onClick={openPicker}
+        onKeyDown={(e) => {
+          if (disabled) return;
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openPicker();
+          }
+        }}
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+      >
+        <div className={styles.uploadIcon} aria-hidden />
+        <p className={styles.primaryText}>Drag and drop files here</p>
+        <p className={styles.secondaryText}>or click to browse</p>
+        {hint != null ? <p className={styles.hint}>{hint}</p> : null}
+      </div>
+      <input
+        ref={inputRef}
+        id={inputId}
+        type="file"
+        className={styles.visuallyHidden}
+        accept={accept}
+        multiple={multiple}
+        disabled={disabled}
+        aria-label={label == null ? 'Choose files to upload' : undefined}
+        onChange={handleInputChange}
+      />
+      {error != null ? <p className={styles.error}>{error}</p> : null}
+      {files.length > 0 ? (
+        <ul className={styles.fileList}>
+          {files.map((file, index) => (
+            <li key={`${file.name}-${file.size}-${index}`} className={styles.fileRow}>
+              <div className={styles.fileMeta}>
+                <span className={styles.fileName}>{file.name}</span>
+                <span className={styles.fileSize}>{formatBytes(file.size)}</span>
+              </div>
+              <button
+                type="button"
+                className={styles.removeBtn}
+                aria-label={`Remove ${file.name}`}
+                disabled={disabled}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeAt(index);
+                }}
+              >
+                ×
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
+  );
+};
+
+===== src/components/molecules/FilterBar/FilterBar.tsx =====
+import { useCallback, useState } from 'react';
+import styles from './FilterBar.module.css';
+
+export type FilterOption = {
+  label: string;
+  value: string;
+  count?: number;
+};
+
+export type FilterBarProps = {
+  filters: FilterOption[];
+  activeFilters?: string[];
+  onChange?: (activeFilters: string[]) => void;
+  multiSelect?: boolean;
+};
+
+export const FilterBar = ({
+  filters,
+  activeFilters: activeProp,
+  onChange,
+  multiSelect = true,
+}: FilterBarProps) => {
+  const [internal, setInternal] = useState<string[]>([]);
+  const isControlled = activeProp !== undefined;
+  const active = isControlled ? activeProp : internal;
+
+  const setActive = useCallback(
+    (next: string[]) => {
+      if (!isControlled) {
+        setInternal(next);
+      }
+      onChange?.(next);
+    },
+    [isControlled, onChange],
+  );
+
+  const toggle = (value: string) => {
+    const isOn = active.includes(value);
+    if (multiSelect) {
+      setActive(isOn ? active.filter((v) => v !== value) : [...active, value]);
+      return;
+    }
+    if (isOn) {
+      setActive([]);
+      return;
+    }
+    setActive([value]);
+  };
+
+  return (
+    <div className={styles.root} role="group" aria-label="Filters">
+      {filters.map((f) => {
+        const isActive = active.includes(f.value);
+        const chipClass = [
+          styles.chip,
+          isActive ? styles.chipActive : styles.chipInactive,
+        ].join(' ');
+
+        return (
+          <button
+            key={f.value}
+            type="button"
+            className={chipClass}
+            aria-pressed={isActive}
+            onClick={() => toggle(f.value)}
+          >
+            <span>{f.label}</span>
+            {f.count != null ? (
+              <span className={styles.count} aria-label={`${f.count} results`}>
+                ({f.count})
+              </span>
+            ) : null}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+===== src/components/molecules/Input/Input.tsx =====
+import { useId } from 'react';
+import type { FocusEvent, ReactNode } from 'react';
+import { Field } from '../../atoms/Field/Field';
+import type { FieldProps } from '../../atoms/Field/Field';
+import { Label } from '../../atoms/Label/Label';
+import styles from './Input.module.css';
+
+export type InputProps = {
+  label: string;
+  placeholder?: string;
+  value?: string;
+  onChange?: (value: string) => void;
+  hint?: string;
+  error?: string;
+  required?: boolean;
+  showHintIcon?: boolean;
+  iconLeft?: ReactNode;
+  iconRight?: ReactNode;
+  type?: 'text' | 'email' | 'password';
+  status?: 'default' | 'hover' | 'focus' | 'error' | 'disabled';
+  width?: string;
+  onFocus?: (e: FocusEvent<HTMLInputElement>) => void;
+  onBlur?: (e: FocusEvent<HTMLInputElement>) => void;
+};
+
+export const Input = ({
+  label,
+  placeholder,
+  value,
+  onChange,
+  hint,
+  error,
+  required = false,
+  showHintIcon = false,
+  iconLeft,
+  iconRight,
+  type: inputType = 'text',
+  status = 'default',
+  width,
+  onFocus,
+  onBlur,
+}: InputProps) => {
+  const baseId = useId();
+  const inputId = `input-${baseId}`;
+  const hintId = `${inputId}-hint`;
+  const errorId = `${inputId}-error`;
+
+  const hasError = Boolean(error?.trim()) || status === 'error';
+  const errorMessage = error?.trim() ?? '';
+
+  const fieldStatus: FieldProps['status'] =
+    status === 'disabled'
+      ? 'disabled'
+      : hasError
+        ? 'error'
+        : status;
+
+  const showHintRow = !hasError && Boolean(hint);
+  const showErrorRow = hasError && Boolean(errorMessage);
+
+  const describedBy =
+    showErrorRow ? errorId : showHintRow ? hintId : undefined;
+
+  return (
+    <div
+      className={styles.root}
+      style={width !== undefined ? { width } : undefined}
+    >
+      <Label
+        htmlFor={inputId}
+        text={label}
+        required={required}
+        hint={showHintIcon}
+      />
+      <Field
+        id={inputId}
+        type={inputType}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        onFocus={onFocus}
+        onBlur={onBlur}
+        status={fieldStatus}
+        iconLeft={iconLeft}
+        iconRight={iconRight}
+        aria-describedby={describedBy}
+      />
+      {showHintRow ? (
+        <p id={hintId} className={styles.hint}>
+          {hint}
+        </p>
+      ) : null}
+      {showErrorRow ? (
+        <p id={errorId} className={styles.error} role="alert">
+          {errorMessage}
+        </p>
+      ) : null}
+    </div>
+  );
+};
+
+===== src/components/molecules/List/List.tsx =====
+import type { ReactNode } from 'react';
+import styles from './List.module.css';
+
+export type ListItem = {
+  label: string;
+  description?: string;
+  icon?: ReactNode;
+  action?: ReactNode;
+  href?: string;
+  active?: boolean;
+  disabled?: boolean;
+};
+
+export type ListProps = {
+  items: ListItem[];
+  variant?: 'default' | 'bordered' | 'striped';
+  size?: 'sm' | 'md' | 'lg';
+  interactive?: boolean;
+};
+
+const sizeClassMap = {
+  sm: styles.sizeSm,
+  md: styles.sizeMd,
+  lg: styles.sizeLg,
+} as const;
+
+export const List = ({
+  items,
+  variant = 'default',
+  size = 'md',
+  interactive = false,
+}: ListProps) => {
+  const variantClass =
+    variant === 'bordered'
+      ? styles.variantBordered
+      : variant === 'striped'
+        ? styles.variantStriped
+        : '';
+
+  const listClass = [styles.list, variantClass].filter(Boolean).join(' ');
+
+  const renderItem = (item: ListItem, index: number) => {
+    const itemClass = [
+      styles.item,
+      sizeClassMap[size],
+      interactive && !item.disabled ? styles.interactive : '',
+      item.disabled ? styles.disabled : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
+
+    const labelClass = [
+      styles.label,
+      item.active ? styles.labelActive : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
+
+    const content = (
+      <>
+        {item.icon != null ? (
+          <span className={styles.iconSlot} aria-hidden>
+            {item.icon}
+          </span>
+        ) : null}
+        <div className={styles.body}>
+          <p className={labelClass}>{item.label}</p>
+          {item.description != null ? (
+            <p className={styles.description}>{item.description}</p>
+          ) : null}
+        </div>
+        {item.action != null ? (
+          <div className={styles.action}>{item.action}</div>
+        ) : null}
+      </>
+    );
+
+    if (item.href != null && !item.disabled) {
+      return (
+        <li key={`${item.label}-${index}`}>
+          <a className={itemClass} href={item.href}>
+            {content}
+          </a>
+        </li>
+      );
+    }
+
+    if (interactive && !item.disabled) {
+      return (
+        <li key={`${item.label}-${index}`}>
+          <div className={itemClass}>{content}</div>
+        </li>
+      );
+    }
+
+    return (
+      <li key={`${item.label}-${index}`}>
+        <div className={itemClass}>{content}</div>
+      </li>
+    );
+  };
+
+  return <ul className={listClass}>{items.map(renderItem)}</ul>;
+};
+
+===== src/components/molecules/NotificationBar/NotificationBar.tsx =====
+import { useState } from 'react';
+import styles from './NotificationBar.module.css';
+
+export type NotificationBarProps = {
+  message: string;
+  variant?: 'primary' | 'success' | 'warning' | 'info' | 'error';
+  dismissible?: boolean;
+  onDismiss?: () => void;
+  action?: { label: string; onClick: () => void };
+  link?: { label: string; href: string };
+};
+
+const variantClassMap = {
+  primary: styles.variantPrimary,
+  success: styles.variantSuccess,
+  warning: styles.variantWarning,
+  info: styles.variantInfo,
+  error: styles.variantError,
+} as const;
+
+export const NotificationBar = ({
+  message,
+  variant = 'primary',
+  dismissible = false,
+  onDismiss,
+  action,
+  link,
+}: NotificationBarProps) => {
+  const [dismissed, setDismissed] = useState(false);
+
+  if (dismissed) {
+    return null;
+  }
+
+  const handleDismiss = () => {
+    setDismissed(true);
+    onDismiss?.();
+  };
+
+  const rootClass = [styles.root, variantClassMap[variant]].join(' ');
+
+  return (
+    <div className={rootClass} role="status">
+      <div className={styles.inner}>
+        <span className={styles.message}>{message}</span>
+        {action != null ? (
+          <button
+            type="button"
+            className={styles.inlineAction}
+            onClick={action.onClick}
+          >
+            {action.label}
+          </button>
+        ) : null}
+        {link != null ? (
+          <a className={styles.inlineLink} href={link.href}>
+            {link.label}
+          </a>
+        ) : null}
+      </div>
+      {dismissible ? (
+        <button
+          type="button"
+          className={styles.dismiss}
+          aria-label="Dismiss announcement"
+          onClick={handleDismiss}
+        >
+          ×
+        </button>
+      ) : null}
+    </div>
+  );
+};
+
+===== src/components/molecules/Pagination/Pagination.tsx =====
+import styles from './Pagination.module.css';
+
+export type PaginationProps = {
+  currentPage: number;
+  totalPages: number;
+  onChange: (page: number) => void;
+  showFirstLast?: boolean;
+  siblingCount?: number;
+};
+
+function buildPageRange(
+  totalPages: number,
+  currentPage: number,
+  siblingCount: number,
+): (number | 'ellipsis')[] {
+  if (totalPages < 1) return [];
+  const set = new Set<number>();
+  set.add(1);
+  set.add(totalPages);
+  for (
+    let i = currentPage - siblingCount;
+    i <= currentPage + siblingCount;
+    i += 1
+  ) {
+    if (i >= 1 && i <= totalPages) {
+      set.add(i);
+    }
+  }
+  const sorted = [...set].sort((a, b) => a - b);
+  const out: (number | 'ellipsis')[] = [];
+  for (let i = 0; i < sorted.length; i += 1) {
+    if (i > 0 && sorted[i]! - sorted[i - 1]! > 1) {
+      out.push('ellipsis');
+    }
+    out.push(sorted[i]!);
+  }
+  return out;
+}
+
+export const Pagination = ({
+  currentPage,
+  totalPages,
+  onChange,
+  showFirstLast = false,
+  siblingCount = 1,
+}: PaginationProps) => {
+  const safeTotal = Math.max(1, totalPages);
+  const current = Math.min(safeTotal, Math.max(1, currentPage));
+  const pages = buildPageRange(safeTotal, current, siblingCount);
+
+  const go = (p: number) => {
+    if (p < 1 || p > safeTotal || p === current) return;
+    onChange(p);
+  };
+
+  return (
+    <nav className={styles.root} aria-label="Pagination">
+      {showFirstLast ? (
+        <button
+          type="button"
+          className={[styles.btn, current <= 1 ? styles.disabled : ''].join(' ')}
+          disabled={current <= 1}
+          aria-label="First page"
+          onClick={() => go(1)}
+        >
+          |&lt;
+        </button>
+      ) : null}
+      <button
+        type="button"
+        className={[styles.btn, current <= 1 ? styles.disabled : ''].join(' ')}
+        disabled={current <= 1}
+        aria-label="Previous page"
+        onClick={() => go(current - 1)}
+      >
+        ←
+      </button>
+      {pages.map((item, idx) =>
+        item === 'ellipsis' ? (
+          <span
+            key={`e-${idx}`}
+            className={[styles.btn, styles.ellipsis].join(' ')}
+            aria-hidden="true"
+          >
+            ...
+          </span>
+        ) : (
+          <button
+            key={item}
+            type="button"
+            className={[
+              styles.btn,
+              item === current ? styles.current : '',
+            ].join(' ')}
+            aria-label={`Page ${item}`}
+            aria-current={item === current ? 'page' : undefined}
+            onClick={() => go(item)}
+          >
+            {item}
+          </button>
+        ),
+      )}
+      <button
+        type="button"
+        className={[
+          styles.btn,
+          current >= safeTotal ? styles.disabled : '',
+        ].join(' ')}
+        disabled={current >= safeTotal}
+        aria-label="Next page"
+        onClick={() => go(current + 1)}
+      >
+        →
+      </button>
+      {showFirstLast ? (
+        <button
+          type="button"
+          className={[
+            styles.btn,
+            current >= safeTotal ? styles.disabled : '',
+          ].join(' ')}
+          disabled={current >= safeTotal}
+          aria-label="Last page"
+          onClick={() => go(safeTotal)}
+        >
+          &gt;|
+        </button>
+      ) : null}
+    </nav>
+  );
+};
+
+===== src/components/molecules/Popover/Popover.tsx =====
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
+import styles from './Popover.module.css';
+
+export type PopoverProps = {
+  trigger: ReactNode;
+  children: ReactNode;
+  title?: string;
+  position?: 'top' | 'bottom' | 'left' | 'right';
+  width?: string;
+  closeOnClickOutside?: boolean;
+};
+
+const anchorClassMap = {
+  top: styles.anchorTop,
+  bottom: styles.anchorBottom,
+  left: styles.anchorLeft,
+  right: styles.anchorRight,
+} as const;
+
+export const Popover = ({
+  trigger,
+  children,
+  title,
+  position = 'bottom',
+  width,
+  closeOnClickOutside = true,
+}: PopoverProps) => {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open || !closeOnClickOutside) return;
+    const onDoc = (e: MouseEvent) => {
+      if (!rootRef.current?.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [open, closeOnClickOutside]);
+
+  const surfaceStyle: CSSProperties =
+    width !== undefined ? { width } : {};
+
+  const anchorClass = [styles.anchor, anchorClassMap[position]].join(' ');
+  const surfaceClass = [styles.surface, open ? styles.surfaceOpen : '']
+    .filter(Boolean)
+    .join(' ');
+
+  return (
+    <div ref={rootRef} className={styles.root}>
+      <div
+        className={styles.trigger}
+        role="button"
+        tabIndex={0}
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setOpen((o) => !o);
+          }
+        }}
+      >
+        {trigger}
+      </div>
+      <div className={anchorClass}>
+        <div className={surfaceClass} style={surfaceStyle}>
+          {title != null ? <p className={styles.title}>{title}</p> : null}
+          <div className={styles.content}>{children}</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+===== src/components/molecules/ProgressBar/ProgressBar.tsx =====
+import styles from './ProgressBar.module.css';
+
+export type ProgressBarProps = {
+  value: number;
+  label?: string;
+  showValue?: boolean;
+  size?: 'sm' | 'md' | 'lg';
+  variant?: 'primary' | 'success' | 'warning' | 'error' | 'info';
+  animated?: boolean;
+};
+
+const sizeClassMap = {
+  sm: styles.trackSm,
+  md: styles.trackMd,
+  lg: styles.trackLg,
+} as const;
+
+const variantClassMap = {
+  primary: styles.variantPrimary,
+  success: styles.variantSuccess,
+  warning: styles.variantWarning,
+  error: styles.variantError,
+  info: styles.variantInfo,
+} as const;
+
+export const ProgressBar = ({
+  value,
+  label,
+  showValue = false,
+  size = 'md',
+  variant = 'primary',
+  animated = false,
+}: ProgressBarProps) => {
+  const clamped = Math.min(100, Math.max(0, value));
+  const rounded = Math.round(clamped);
+
+  const trackClass = [styles.track, sizeClassMap[size]].join(' ');
+  const fillClass = [
+    styles.fill,
+    variantClassMap[variant],
+    animated ? styles.fillAnimated : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  return (
+    <div className={styles.root}>
+      {label != null ? (
+        <span className={styles.label}>{label}</span>
+      ) : null}
+      <div className={styles.row}>
+        <div className={trackClass}>
+          <div
+            className={fillClass}
+            style={{ width: `${clamped}%` }}
+            role="progressbar"
+            aria-valuenow={rounded}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          />
+        </div>
+        {showValue ? (
+          <span className={styles.valueText}>{rounded}%</span>
+        ) : null}
+      </div>
+    </div>
+  );
+};
+
+===== src/components/molecules/ProgressCircle/ProgressCircle.tsx =====
+import styles from './ProgressCircle.module.css';
+
+export type ProgressCircleProps = {
+  value: number;
+  size?: 'sm' | 'md' | 'lg';
+  label?: string;
+  variant?: 'primary' | 'success' | 'warning' | 'error' | 'info';
+  animated?: boolean;
+  showValue?: boolean;
+};
+
+const sizeClassMap = {
+  sm: styles.sizeSm,
+  md: styles.sizeMd,
+  lg: styles.sizeLg,
+} as const;
+
+const valueTextClassMap = {
+  sm: styles.valueSm,
+  md: styles.valueMd,
+  lg: styles.valueLg,
+} as const;
+
+const variantClassMap = {
+  primary: styles.variantPrimary,
+  success: styles.variantSuccess,
+  warning: styles.variantWarning,
+  error: styles.variantError,
+  info: styles.variantInfo,
+} as const;
+
+/** Diameter and stroke match values in cwpc-tokens.css */
+const GEOMETRY = {
+  sm: { d: 60, stroke: 4 },
+  md: { d: 100, stroke: 6 },
+  lg: { d: 140, stroke: 8 },
+} as const;
+
+export const ProgressCircle = ({
+  value,
+  size = 'md',
+  label,
+  variant = 'primary',
+  animated = false,
+  showValue = true,
+}: ProgressCircleProps) => {
+  const clamped = Math.min(100, Math.max(0, value));
+  const rounded = Math.round(clamped);
+  const { d, stroke } = GEOMETRY[size];
+  const cx = d / 2;
+  const cy = d / 2;
+  const r = (d - stroke) / 2;
+  const circumference = 2 * Math.PI * r;
+  const dashOffset = circumference * (1 - clamped / 100);
+
+  const svgClass = [styles.svg, sizeClassMap[size]].join(' ');
+  const progressClass = [
+    styles.progress,
+    variantClassMap[variant],
+    animated ? styles.progressAnimated : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+  const valueClass = [styles.value, valueTextClassMap[size]].join(' ');
+
+  const ariaLabel =
+    label != null ? `${label}: ${rounded}%` : `Progress: ${rounded}%`;
+
+  return (
+    <div
+      className={styles.root}
+      role="progressbar"
+      aria-valuenow={rounded}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuetext={`${rounded}%`}
+      aria-label={ariaLabel}
+    >
+      <div className={styles.svgWrap}>
+        <svg
+          className={svgClass}
+          viewBox={`0 0 ${d} ${d}`}
+          aria-hidden="true"
+          focusable="false"
+        >
+          <g transform={`rotate(-90 ${cx} ${cy})`}>
+            <circle
+              className={styles.track}
+              cx={cx}
+              cy={cy}
+              r={r}
+              strokeWidth={stroke}
+            />
+            <circle
+              className={progressClass}
+              cx={cx}
+              cy={cy}
+              r={r}
+              strokeWidth={stroke}
+              strokeDasharray={circumference}
+              strokeDashoffset={dashOffset}
+            />
+          </g>
+          {showValue ? (
+            <text
+              className={valueClass}
+              x={cx}
+              y={cy}
+              dominantBaseline="central"
+              textAnchor="middle"
+            >
+              {rounded}%
+            </text>
+          ) : null}
+        </svg>
+      </div>
+      {label != null ? <span className={styles.label}>{label}</span> : null}
+    </div>
+  );
+};
+
+===== src/components/molecules/RadioButton/RadioButton.tsx =====
+import { useId } from 'react';
+import type { ChangeEvent } from 'react';
+import styles from './RadioButton.module.css';
+
+export type RadioButtonProps = {
+  label: string;
+  value: string;
+  checked?: boolean;
+  onChange?: (value: string) => void;
+  disabled?: boolean;
+  hint?: string;
+  name?: string;
+  defaultChecked?: boolean;
+};
+
+export const RadioButton = ({
+  label,
+  value,
+  checked,
+  onChange,
+  disabled = false,
+  hint,
+  name,
+  defaultChecked = false,
+}: RadioButtonProps) => {
+  const isControlled = checked !== undefined;
+  const hintId = useId();
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (disabled || !e.target.checked) return;
+    onChange?.(value);
+  };
+
+  const wrapperClass = [styles.wrapper, disabled ? styles.disabled : '']
+    .filter(Boolean)
+    .join(' ');
+
+  const rootClass = [styles.root, disabled ? styles.disabled : '']
+    .filter(Boolean)
+    .join(' ');
+
+  return (
+    <div className={wrapperClass}>
+      <label className={rootClass}>
+        <span className={styles.circleWrap}>
+          {isControlled ? (
+            <input
+              type="radio"
+              className={styles.native}
+              name={name}
+              value={value}
+              checked={checked}
+              onChange={handleChange}
+              disabled={disabled}
+              aria-describedby={hint ? hintId : undefined}
+            />
+          ) : (
+            <input
+              type="radio"
+              className={styles.native}
+              name={name}
+              value={value}
+              defaultChecked={defaultChecked}
+              onChange={handleChange}
+              disabled={disabled}
+              aria-describedby={hint ? hintId : undefined}
+            />
+          )}
+          <span className={styles.circle} aria-hidden="true">
+            <span className={styles.dot} />
+          </span>
+        </span>
+        <span className={styles.labelText}>{label}</span>
+      </label>
+      {hint ? (
+        <p id={hintId} className={styles.hint}>
+          {hint}
+        </p>
+      ) : null}
+    </div>
+  );
+};
+
+===== src/components/molecules/ScrollToTop/ScrollToTop.tsx =====
+import { useEffect, useState } from 'react';
+import styles from './ScrollToTop.module.css';
+
+export type ScrollToTopProps = {
+  threshold?: number;
+  position?: 'bottom-right' | 'bottom-left';
+};
+
+export const ScrollToTop = ({
+  threshold,
+  position = 'bottom-right',
+}: ScrollToTopProps) => {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const defaultThreshold = (() => {
+      const raw = getComputedStyle(root)
+        .getPropertyValue('--threshold-scroll-to-top')
+        .trim();
+      const n = parseInt(raw, 10);
+      return Number.isFinite(n) ? n : 300;
+    })();
+    const limit = threshold ?? defaultThreshold;
+
+    const onScroll = () => {
+      setVisible(window.scrollY > limit);
+    };
+
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [threshold]);
+
+  const rootClass = [
+    styles.root,
+    position === 'bottom-right'
+      ? styles.positionBottomRight
+      : styles.positionBottomLeft,
+    visible ? styles.visible : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  return (
+    <button
+      type="button"
+      className={rootClass}
+      aria-label="Scroll to top"
+      onClick={() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }}
+    >
+      ↑
+    </button>
+  );
+};
+
+===== src/components/molecules/SearchBar/SearchBar.tsx =====
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from 'react';
+import { Loader } from '../../atoms/Loader/Loader';
+import styles from './SearchBar.module.css';
+
+export type SearchBarProps = {
+  placeholder?: string;
+  value?: string;
+  onChange?: (value: string) => void;
+  onSearch?: (value: string) => void;
+  onClear?: () => void;
+  size?: 'sm' | 'md' | 'lg';
+  loading?: boolean;
+  disabled?: boolean;
+  suggestions?: string[];
+};
+
+const sizeClassMap = {
+  sm: styles.sizeSm,
+  md: styles.sizeMd,
+  lg: styles.sizeLg,
+} as const;
+
+export const SearchBar = ({
+  placeholder = 'Search…',
+  value: valueProp,
+  onChange,
+  onSearch,
+  onClear,
+  size = 'md',
+  loading = false,
+  disabled = false,
+  suggestions = [],
+}: SearchBarProps) => {
+  const listId = useId();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [internalValue, setInternalValue] = useState('');
+  const [open, setOpen] = useState(false);
+  const [highlight, setHighlight] = useState(0);
+
+  const isControlled = valueProp !== undefined;
+  const value = isControlled ? valueProp : internalValue;
+
+  const setValue = useCallback(
+    (next: string) => {
+      if (!isControlled) {
+        setInternalValue(next);
+      }
+      onChange?.(next);
+    },
+    [isControlled, onChange],
+  );
+
+  const filtered =
+    suggestions.length === 0
+      ? []
+      : suggestions.filter((s) =>
+          s.toLowerCase().includes(value.trim().toLowerCase()),
+        );
+
+  const showList = open && filtered.length > 0 && !disabled;
+
+  useEffect(() => {
+    if (!showList) return;
+    const onDoc = (e: MouseEvent) => {
+      if (!rootRef.current?.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [showList]);
+
+  useEffect(() => {
+    if (showList) {
+      setHighlight(0);
+    }
+  }, [value, showList]);
+
+  const rootClass = [
+    styles.root,
+    sizeClassMap[size],
+    disabled ? styles.disabled : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const handleClear = () => {
+    setValue('');
+    onClear?.();
+    inputRef.current?.focus();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (showList && filtered.length > 0) {
+        const pick = filtered[highlight] ?? filtered[0];
+        setValue(pick);
+        setOpen(false);
+        onSearch?.(pick);
+        return;
+      }
+      onSearch?.(value);
+      setOpen(false);
+      return;
+    }
+    if (!showList) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setHighlight((h) => Math.min(h + 1, filtered.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHighlight((h) => Math.max(h - 1, 0));
+    } else if (e.key === 'Escape') {
+      setOpen(false);
+    }
+  };
+
+  return (
+    <div ref={rootRef} className={styles.wrapper}>
+      <div className={rootClass}>
+        <span className={styles.iconSlot} aria-hidden>
+          {loading ? (
+            <Loader size="sm" variant="primary" label="Loading" />
+          ) : (
+            <span className={styles.searchIcon} />
+          )}
+        </span>
+        <input
+          ref={inputRef}
+          type="search"
+          className={styles.input}
+          placeholder={placeholder}
+          value={value}
+          disabled={disabled}
+          role="combobox"
+          aria-expanded={showList}
+          aria-controls={showList ? listId : undefined}
+          aria-autocomplete="list"
+          onChange={(e) => {
+            setValue(e.target.value);
+            setOpen(suggestions.length > 0);
+          }}
+          onFocus={() => {
+            if (suggestions.length > 0) setOpen(true);
+          }}
+          onKeyDown={handleKeyDown}
+        />
+        {value.length > 0 ? (
+          <button
+            type="button"
+            className={styles.clearBtn}
+            aria-label="Clear search"
+            disabled={disabled}
+            onClick={handleClear}
+          >
+            ×
+          </button>
+        ) : null}
+      </div>
+      {showList ? (
+        <ul id={listId} className={styles.suggestionList} role="listbox">
+          {filtered.map((s, i) => (
+            <li
+              key={`${s}-${i}`}
+              role="option"
+              aria-selected={i === highlight}
+              className={[
+                styles.suggestionOption,
+                i === highlight ? styles.suggestionOptionHighlight : '',
+              ]
+                .filter(Boolean)
+                .join(' ')}
+              onMouseEnter={() => setHighlight(i)}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                setValue(s);
+                setOpen(false);
+                onSearch?.(s);
+              }}
+            >
+              {s}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
+  );
+};
+
+===== src/components/molecules/SocialButton/SocialButton.tsx =====
+import type { ReactNode } from 'react';
+import styles from './SocialButton.module.css';
+
+export type SocialButtonProps = {
+  platform:
+    | 'facebook'
+    | 'twitter'
+    | 'linkedin'
+    | 'youtube'
+    | 'instagram'
+    | 'tiktok'
+    | 'share';
+  href: string;
+  variant?: 'brand' | 'primary' | 'outlined';
+  size?: 'xs' | 'sm' | 'md';
+};
+
+const brandClassMap = {
+  facebook: styles.brandFacebook,
+  twitter: styles.brandTwitter,
+  linkedin: styles.brandLinkedin,
+  youtube: styles.brandYoutube,
+  instagram: styles.brandInstagram,
+  tiktok: styles.brandTiktok,
+  share: styles.brandShare,
+} as const;
+
+const icons: Record<SocialButtonProps['platform'], ReactNode> = {
+  facebook: (
+    <svg className={styles.icon} viewBox="0 0 24 24" aria-hidden>
+      <path d="M14 9h3V6h-3c-2.2 0-4 1.8-4 4v2H8v3h2v7h3v-7h2.5l.5-3H13v-2c0-.6.4-1 1-1z" />
+    </svg>
+  ),
+  twitter: (
+    <svg className={styles.icon} viewBox="0 0 24 24" aria-hidden>
+      <path d="M18.2 7.5c.2-.2.4-.5.5-.8-1.8.7-3 .8-1-.9-2.2-1.5-3.6-1.5-2.7 0-4.9 2.2-4.9 4.9 0 .4 0 .8.1 1.1-4.1-.2-7.7-2.2-10.1-5.2-.4.7-.7 1.6-.7 2.5 0 1.7.9 3.2 2.2 4.1-.8 0-1.6-.2-2.2-.6v.1c0 2.4 1.7 4.4 4 4.9-.4.1-.8.2-1.3.2-.3 0-.6 0-.9-.1.6 2 2.4 3.4 4.5 3.4-1.7 1.3-3.8 2.1-6.1 2.1-.4 0-.8 0-1.2-.1 2.2 1.4 4.8 2.2 7.6 2.2 9.1 0 14.1-7.5 14.1-14.1v-.6c1-.7 1.8-1.6 2.5-2.6z" />
+    </svg>
+  ),
+  linkedin: (
+    <svg className={styles.icon} viewBox="0 0 24 24" aria-hidden>
+      <path d="M6.5 8.5h-3V21h3V8.5zm-1.5-4.5C4 4 3 5 3 6.2s1 2.2 2.5 2.2S8 7.5 8 6.2 7 4 5 4 5 4zm12.5 5c-2.8 0-4.5 1.5-5.3 2.6V8.5H9V21h3v-6.3c0-1.4.5-2.8 2.4-2.8 2.1 0 2.1 1.9 2.1 3.4V21h3v-7.2c0-3.5-.8-6.2-4.8-6.2z" />
+    </svg>
+  ),
+  youtube: (
+    <svg className={styles.icon} viewBox="0 0 24 24" aria-hidden>
+      <path d="M21.8 8.2s-.2-1.4-.8-2c-.8-.8-1.7-.8-2.1-.9C16 5 12 5 12 5s-4 0-6.9.3c-.4 0-1.3 0-2.1.9-.6.6-.8 2-.8 2S2 9.9 2 11.7v1.6c0 1.8.2 3.5.2 3.5s.2 1.4.8 2c.8.8 1.8.8 2.2.9 1.6.2 6.8.2 6.8.2s4 0 6.9-.3c.4 0 1.3 0 2.1-.9.6-.6.8-2 .8-2s.2-1.7.2-3.5v-1.6c0-1.8-.2-3.5-.2-3.5zM10 15.5v-7l5.5 3.5L10 15.5z" />
+    </svg>
+  ),
+  instagram: (
+    <svg className={styles.icon} viewBox="0 0 24 24" aria-hidden>
+      <path d="M12 7.2c-2.7 0-4.8 2.1-4.8 4.8s2.1 4.8 4.8 4.8 4.8-2.1 4.8-4.8-2.1-4.8-4.8-4.8zm0 7.9c-1.7 0-3.1-1.4-3.1-3.1s1.4-3.1 3.1-3.1 3.1 1.4 3.1 3.1-1.4 3.1-3.1 3.1zm6.1-8.1c0 .6-.5 1.1-1.1 1.1s-1.1-.5-1.1-1.1.5-1.1 1.1-1.1 1.1.5 1.1 1.1zM20 8.3c0-1.3-.3-2.6-.9-3.7-.9-1.6-2.7-2.5-5.1-2.6H10c-2.4.1-4.2 1-5.1 2.6C4.3 5.7 4 6.9 4 8.3v7.4c0 1.3.3 2.6.9 3.7.9 1.6 2.7 2.5 5.1 2.6h4c2.4-.1 4.2-1 5.1-2.6.6-1.1.9-2.3.9-3.7V8.3zM18.2 16c0 .9-.2 1.7-.5 2.2-.5.9-1.7 1.4-3.2 1.5H9.5c-1.5-.1-2.7-.6-3.2-1.5-.3-.5-.5-1.3-.5-2.2V8c0-.9.2-1.7.5-2.2.5-.9 1.7-1.4 3.2-1.5h5c1.5.1 2.7.6 3.2 1.5.3.5.5 1.3.5 2.2v8z" />
+    </svg>
+  ),
+  tiktok: (
+    <svg className={styles.icon} viewBox="0 0 24 24" aria-hidden>
+      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
+    </svg>
+  ),
+  share: (
+    <svg className={styles.icon} viewBox="0 0 24 24" aria-hidden>
+      <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z" />
+    </svg>
+  ),
+};
+
+export const SocialButton = ({
+  platform,
+  href,
+  variant = 'brand',
+  size = 'md',
+}: SocialButtonProps) => {
+  const sizeClass =
+    size === 'xs'
+      ? styles.sizeXs
+      : size === 'sm'
+        ? styles.sizeSm
+        : styles.sizeMd;
+
+  const variantClasses =
+    variant === 'brand'
+      ? [styles.variantBrand, brandClassMap[platform]]
+      : variant === 'primary'
+        ? [styles.variantPrimary]
+        : [styles.variantOutlined];
+
+  const rootClass = [styles.root, sizeClass, ...variantClasses]
+    .filter(Boolean)
+    .join(' ');
+
+  const label =
+    variant === 'brand'
+      ? `Visit our ${platform} page`
+      : `${platform} social link`;
+
+  return (
+    <a
+      className={rootClass}
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={label}
+    >
+      {icons[platform]}
+    </a>
+  );
+};
+
+===== src/components/molecules/SocialButton/SocialButtonGroup.tsx =====
+import type { ReactNode } from 'react';
+import styles from './SocialButtonGroup.module.css';
+
+export type SocialButtonGroupProps = {
+  children: ReactNode;
+  gap?: 'sm' | 'md';
+};
+
+export const SocialButtonGroup = ({
+  children,
+  gap = 'md',
+}: SocialButtonGroupProps) => {
+  const rootClass = [
+    styles.root,
+    gap === 'sm' ? styles.gapSm : styles.gapMd,
+  ].join(' ');
+
+  return <div className={rootClass}>{children}</div>;
+};
+
+===== src/components/molecules/StatCard/StatCard.tsx =====
+import type { ReactNode } from 'react';
+import styles from './StatCard.module.css';
+
+export type StatCardProps = {
+  value: string;
+  label: string;
+  trend?: 'up' | 'down' | 'neutral';
+  trendValue?: string;
+  variant?: 'primary' | 'success' | 'info' | 'warning';
+  icon?: ReactNode;
+  description?: string;
+};
+
+const variantClassMap = {
+  primary: styles.variantPrimary,
+  success: styles.variantSuccess,
+  info: styles.variantInfo,
+  warning: styles.variantWarning,
+} as const;
+
+export const StatCard = ({
+  value,
+  label,
+  trend,
+  trendValue,
+  variant = 'primary',
+  icon,
+  description,
+}: StatCardProps) => {
+  const rootClass = [styles.root, variantClassMap[variant]]
+    .filter(Boolean)
+    .join(' ');
+
+  const trendClass =
+    trend === 'up'
+      ? styles.trendUp
+      : trend === 'down'
+        ? styles.trendDown
+        : trend === 'neutral'
+          ? styles.trendNeutral
+          : '';
+
+  const arrow =
+    trend === 'up' ? '↑' : trend === 'down' ? '↓' : trend === 'neutral' ? '→' : null;
+
+  return (
+    <article className={rootClass}>
+      {icon != null ? <div className={styles.iconSlot}>{icon}</div> : null}
+      <div className={styles.valueRow}>
+        <p className={styles.value}>{value}</p>
+        {trend != null && arrow != null ? (
+          <span className={[styles.trend, trendClass].filter(Boolean).join(' ')}>
+            <span className={styles.trendArrow} aria-hidden>
+              {arrow}
+            </span>
+            {trendValue != null ? (
+              <span className={styles.trendValue}>{trendValue}</span>
+            ) : null}
+          </span>
+        ) : null}
+      </div>
+      <p className={styles.label}>{label}</p>
+      {description != null ? (
+        <p className={styles.description}>{description}</p>
+      ) : null}
+    </article>
+  );
+};
+
+===== src/components/molecules/Stepper/Stepper.tsx =====
+import styles from './Stepper.module.css';
+
+export type Step = {
+  label: string;
+  description?: string;
+  status?: 'complete' | 'current' | 'upcoming';
+};
+
+export type StepperProps = {
+  steps: Step[];
+  currentStep?: number;
+  orientation?: 'horizontal' | 'vertical';
+};
+
+function resolveStatus(
+  index: number,
+  currentStep: number,
+  explicit?: Step['status'],
+): 'complete' | 'current' | 'upcoming' {
+  if (explicit) return explicit;
+  if (index < currentStep) return 'complete';
+  if (index === currentStep) return 'current';
+  return 'upcoming';
+}
+
+function segmentTone(
+  segmentIndex: number,
+  currentStep: number,
+): 'success' | 'primary' | 'neutral' {
+  if (segmentIndex < currentStep) return 'success';
+  if (segmentIndex === currentStep) return 'primary';
+  return 'neutral';
+}
+
+const segmentClassMap = {
+  success: styles.segmentSuccess,
+  primary: styles.segmentPrimary,
+  neutral: styles.segmentNeutral,
+} as const;
+
+export const Stepper = ({
+  steps,
+  currentStep: currentStepProp = 0,
+  orientation = 'horizontal',
+}: StepperProps) => {
+  const n = steps.length;
+  const currentStep = Math.min(Math.max(0, currentStepProp), Math.max(0, n - 1));
+
+  const renderCircle = (status: 'complete' | 'current' | 'upcoming', index: number) => {
+    const circleClass = [
+      styles.circle,
+      status === 'complete'
+        ? styles.circleComplete
+        : status === 'current'
+          ? styles.circleCurrent
+          : styles.circleUpcoming,
+    ].join(' ');
+
+    return (
+      <div className={circleClass} aria-current={status === 'current' ? 'step' : undefined}>
+        {status === 'complete' ? (
+          <span className={styles.check} aria-hidden>
+            ✓
+          </span>
+        ) : (
+          <span aria-hidden>{index + 1}</span>
+        )}
+      </div>
+    );
+  };
+
+  const renderLabelBlock = (
+    step: Step,
+    status: 'complete' | 'current' | 'upcoming',
+  ) => {
+    const labelClass = [
+      styles.label,
+      status === 'complete'
+        ? styles.labelComplete
+        : status === 'current'
+          ? styles.labelCurrent
+          : styles.labelUpcoming,
+    ].join(' ');
+
+    return (
+      <div className={styles.textBlock}>
+        <p className={labelClass}>{step.label}</p>
+        {step.description != null ? (
+          <p className={styles.description}>{step.description}</p>
+        ) : null}
+      </div>
+    );
+  };
+
+  if (orientation === 'vertical') {
+    return (
+      <nav className={[styles.root, styles.vertical].join(' ')} aria-label="Progress">
+        <ol className={styles.list}>
+          {steps.map((step, i) => {
+            const status = resolveStatus(i, currentStep, step.status);
+            const segTone =
+              i < n - 1 ? segmentTone(i, currentStep) : null;
+            const segClass =
+              segTone != null ? segmentClassMap[segTone] : styles.segmentNeutral;
+
+            return (
+              <li key={`${step.label}-${i}`} className={styles.vStep}>
+                <div className={styles.vLeft}>
+                  {renderCircle(status, i)}
+                  {i < n - 1 ? (
+                    <div className={[styles.vLine, segClass].join(' ')} aria-hidden />
+                  ) : null}
+                </div>
+                <div className={styles.vText}>{renderLabelBlock(step, status)}</div>
+              </li>
+            );
+          })}
+        </ol>
+      </nav>
+    );
+  }
+
+  return (
+    <nav className={[styles.root, styles.horizontal].join(' ')} aria-label="Progress">
+      <ol className={[styles.list, styles.listHorizontal].join(' ')}>
+        {steps.map((step, i) => {
+          const status = resolveStatus(i, currentStep, step.status);
+          const leftTone = i > 0 ? segmentTone(i - 1, currentStep) : null;
+          const rightTone = i < n - 1 ? segmentTone(i, currentStep) : null;
+
+          return (
+            <li key={`${step.label}-${i}`} className={styles.stepCol}>
+              <div className={styles.track}>
+                {i > 0 ? (
+                  <div
+                    className={[
+                      styles.segment,
+                      leftTone != null
+                        ? segmentClassMap[leftTone]
+                        : styles.segmentNeutral,
+                    ].join(' ')}
+                    aria-hidden
+                  />
+                ) : (
+                  <div className={styles.segmentSpacer} aria-hidden />
+                )}
+                {renderCircle(status, i)}
+                {i < n - 1 ? (
+                  <div
+                    className={[
+                      styles.segment,
+                      rightTone != null
+                        ? segmentClassMap[rightTone]
+                        : styles.segmentNeutral,
+                    ].join(' ')}
+                    aria-hidden
+                  />
+                ) : (
+                  <div className={styles.segmentSpacer} aria-hidden />
+                )}
+              </div>
+              {renderLabelBlock(step, status)}
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
+  );
+};
+
+===== src/components/molecules/StickyBar/StickyBar.tsx =====
+import {
+  useEffect,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
+import styles from './StickyBar.module.css';
+
+const FOOTER_NEAR_PX = 100;
+
+export type StickyBarProps = {
+  children: ReactNode;
+  visible?: boolean;
+  background?: string;
+};
+
+export const StickyBar = ({
+  children,
+  visible = true,
+  background,
+}: StickyBarProps) => {
+  const [nearPageBottom, setNearPageBottom] = useState(false);
+
+  useEffect(() => {
+    const update = () => {
+      const el = document.documentElement;
+      const scrollHeight = Math.max(
+        document.body.scrollHeight,
+        el.scrollHeight,
+      );
+      const viewBottom = window.scrollY + window.innerHeight;
+      setNearPageBottom(viewBottom >= scrollHeight - FOOTER_NEAR_PX);
+    };
+
+    update();
+    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    return () => {
+      window.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+    };
+  }, []);
+
+  if (!visible || nearPageBottom) {
+    return null;
+  }
+
+  const rootClass = [styles.root, styles.visible].join(' ');
+
+  const style: CSSProperties | undefined =
+    background !== undefined ? { background } : undefined;
+
+  return (
+    <div className={rootClass} style={style} role="region" aria-label="Sticky actions">
+      <div className={styles.inner}>{children}</div>
+    </div>
+  );
+};
+
+===== src/components/molecules/SubscribeWidget/SubscribeWidget.tsx =====
+import { useState } from 'react';
+import { Button } from '../../atoms/Button/Button';
+import { Field } from '../../atoms/Field/Field';
+import styles from './SubscribeWidget.module.css';
+
+export type SubscribeWidgetProps = {
+  label?: string;
+  placeholder?: string;
+  buttonLabel?: string;
+  onSubscribe?: (email: string) => void;
+  successMessage?: string;
+  variant?: 'dark' | 'light';
+  layout?: 'row' | 'column';
+};
+
+function isValidEmail(value: string): boolean {
+  const t = value.trim();
+  return t.includes('@') && t.includes('.');
+}
+
+export const SubscribeWidget = ({
+  label,
+  placeholder = 'Email address',
+  buttonLabel = 'Subscribe',
+  onSubscribe,
+  successMessage = 'Thanks — you are subscribed.',
+  variant = 'dark',
+  layout = 'row',
+}: SubscribeWidgetProps) => {
+  const [email, setEmail] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const rootClass = [
+    styles.root,
+    variant === 'light' ? styles.variantLight : styles.variantDark,
+    layout === 'column' ? styles.layoutColumn : styles.layoutRow,
+  ].join(' ');
+
+  const handleSubmit = () => {
+    setError(null);
+    if (!isValidEmail(email)) {
+      setError('Enter a valid email address.');
+      return;
+    }
+    onSubscribe?.(email.trim());
+    setSubmitted(true);
+  };
+
+  if (submitted) {
+    const successClass = [
+      styles.successRoot,
+      variant === 'light' ? styles.variantLight : styles.variantDark,
+      layout === 'column' ? styles.successRootColumn : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
+    return (
+      <div className={successClass} role="status">
+        <span className={styles.successIcon} aria-hidden>
+          ✓
+        </span>
+        <p className={styles.successText}>{successMessage}</p>
+      </div>
+    );
+  }
+
+  const emailControl =
+    variant === 'dark' ? (
+      <Field
+        type="email"
+        name="subscribe-email"
+        placeholder={placeholder}
+        value={email}
+        onChange={setEmail}
+        autoComplete="email"
+        aria-invalid={error != null || undefined}
+      />
+    ) : (
+      <input
+        className={styles.inputLight}
+        type="email"
+        name="subscribe-email"
+        placeholder={placeholder}
+        value={email}
+        autoComplete="email"
+        aria-invalid={error != null || undefined}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+    );
+
+  return (
+    <div className={rootClass}>
+      {label != null && label.length > 0 ? (
+        <span className={styles.fieldLabel}>{label}</span>
+      ) : null}
+      <div className={styles.controls}>
+        {emailControl}
+        <Button label={buttonLabel} type="default" onClick={handleSubmit} />
+      </div>
+      {error != null ? (
+        <p className={styles.error} role="alert">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+};
+
+===== src/components/molecules/Switch/Switch.tsx =====
+import { useId, useState } from 'react';
+import type { ChangeEvent } from 'react';
+import styles from './Switch.module.css';
+
+export type SwitchProps = {
+  label: string;
+  checked?: boolean;
+  onChange?: (checked: boolean) => void;
+  disabled?: boolean;
+  hint?: string;
+  defaultChecked?: boolean;
+};
+
+export const Switch = ({
+  label,
+  checked,
+  onChange,
+  disabled = false,
+  hint,
+  defaultChecked = false,
+}: SwitchProps) => {
+  const isControlled = checked !== undefined;
+  const [internalChecked, setInternalChecked] = useState(
+    () => defaultChecked ?? false,
+  );
+  const isChecked = isControlled ? checked : internalChecked;
+
+  const hintId = useId();
+  const switchId = useId();
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (disabled) return;
+    const next = e.target.checked;
+    if (!isControlled) {
+      setInternalChecked(next);
+    }
+    onChange?.(next);
+  };
+
+  const wrapperClass = [styles.wrapper, disabled ? styles.disabled : '']
+    .filter(Boolean)
+    .join(' ');
+
+  const rootClass = [styles.root, disabled ? styles.disabled : '']
+    .filter(Boolean)
+    .join(' ');
+
+  return (
+    <div className={wrapperClass}>
+      <label className={rootClass} htmlFor={switchId}>
+        <span className={styles.trackWrap}>
+          <input
+            id={switchId}
+            type="checkbox"
+            role="switch"
+            className={styles.native}
+            checked={isChecked}
+            onChange={handleChange}
+            disabled={disabled}
+            aria-checked={isChecked}
+            aria-describedby={hint ? hintId : undefined}
+          />
+          <span className={styles.track} aria-hidden="true">
+            <span className={styles.thumb} />
+          </span>
+        </span>
+        <span className={styles.labelText}>{label}</span>
+      </label>
+      {hint ? (
+        <p id={hintId} className={styles.hint}>
+          {hint}
+        </p>
+      ) : null}
+    </div>
+  );
+};
+
+===== src/components/molecules/TabBar/TabBar.tsx =====
+import { useState } from 'react';
+import { Badge } from '../../atoms/Badge/Badge';
+import styles from './TabBar.module.css';
+
+export type TabItem = {
+  id: string;
+  label: string;
+  disabled?: boolean;
+  badge?: number;
+};
+
+export type TabBarProps = {
+  tabs: TabItem[];
+  activeTab?: string;
+  onChange?: (tabId: string) => void;
+  defaultTab?: string;
+};
+
+export const TabBar = ({
+  tabs,
+  activeTab,
+  onChange,
+  defaultTab,
+}: TabBarProps) => {
+  const isControlled = activeTab !== undefined;
+  const firstId = tabs[0]?.id ?? '';
+
+  const [internalTab, setInternalTab] = useState(
+    () => defaultTab ?? firstId,
+  );
+
+  const current = isControlled ? activeTab! : internalTab;
+
+  const handleSelect = (tab: TabItem) => {
+    if (tab.disabled) return;
+    onChange?.(tab.id);
+    if (!isControlled) {
+      setInternalTab(tab.id);
+    }
+  };
+
+  return (
+    <div className={styles.root} role="tablist">
+      {tabs.map((tab) => {
+        const isActive = tab.id === current;
+        const tabClass = [
+          styles.tab,
+          isActive ? styles.tabActive : '',
+          tab.disabled ? styles.tabDisabled : '',
+        ]
+          .filter(Boolean)
+          .join(' ');
+
+        return (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            className={tabClass}
+            aria-selected={isActive}
+            disabled={tab.disabled}
+            onClick={() => handleSelect(tab)}
+          >
+            <span className={styles.tabInner}>
+              <span>{tab.label}</span>
+              {tab.badge != null ? (
+                <Badge
+                  label={String(tab.badge)}
+                  variant="primary"
+                  size="sm"
+                />
+              ) : null}
+            </span>
+            {isActive && !tab.disabled ? (
+              <span className={styles.indicator} aria-hidden="true" />
+            ) : null}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+===== src/components/molecules/TextArea/TextArea.tsx =====
+import { useId, useState } from 'react';
+import type { ChangeEvent, TextareaHTMLAttributes } from 'react';
+import { Label } from '../../atoms/Label/Label';
+import styles from './TextArea.module.css';
+
+export type TextAreaProps = {
+  label: string;
+  placeholder?: string;
+  value?: string;
+  onChange?: (value: string) => void;
+  rows?: number;
+  maxLength?: number;
+  showCount?: boolean;
+  hint?: string;
+  error?: string;
+  disabled?: boolean;
+  required?: boolean;
+  status?: 'default' | 'hover' | 'focus' | 'error' | 'disabled';
+} & Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'value' | 'onChange' | 'disabled'>;
+
+export const TextArea = ({
+  label,
+  placeholder,
+  value,
+  onChange,
+  rows = 4,
+  maxLength,
+  showCount = false,
+  hint,
+  error,
+  disabled = false,
+  required = false,
+  status = 'default',
+  ...textareaRest
+}: TextAreaProps) => {
+  const baseId = useId();
+  const areaId = `textarea-${baseId}`;
+  const hintId = `${areaId}-hint`;
+  const errorId = `${areaId}-error`;
+
+  const isValueControlled = value !== undefined;
+  const [internalValue, setInternalValue] = useState('');
+
+  const currentValue = isValueControlled ? value : internalValue;
+
+  const hasError = Boolean(error?.trim()) || status === 'error';
+  const errorMessage = error?.trim() ?? '';
+  const showHintRow = !hasError && Boolean(hint);
+  const showErrorRow = hasError && Boolean(errorMessage);
+
+  const isDisabled = disabled || status === 'disabled';
+  const interactive = status === 'default';
+  const forceHover = status === 'hover';
+  const forceFocus = status === 'focus';
+  const isErrorState = hasError;
+
+  const fieldClass = [
+    styles.field,
+    interactive ? styles.interactive : '',
+    forceHover ? styles.forceHover : '',
+    forceFocus ? styles.forceFocus : '',
+    isErrorState ? styles.statusError : '',
+    isDisabled ? styles.statusDisabled : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const describedBy =
+    showErrorRow ? errorId : showHintRow ? hintId : undefined;
+
+  const handleChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    const next = e.target.value;
+    if (!isValueControlled) {
+      setInternalValue(next);
+    }
+    onChange?.(next);
+  };
+
+  return (
+    <div className={styles.root}>
+      <Label htmlFor={areaId} text={label} required={required} />
+      <div className={fieldClass}>
+        <textarea
+          {...textareaRest}
+          id={areaId}
+          className={styles.textarea}
+          placeholder={placeholder}
+          value={currentValue}
+          rows={rows}
+          maxLength={maxLength}
+          disabled={isDisabled}
+          aria-invalid={isErrorState || undefined}
+          aria-describedby={describedBy}
+          onChange={handleChange}
+        />
+      </div>
+      {showCount && maxLength != null ? (
+        <p className={styles.count} aria-live="polite">
+          {`${currentValue.length}/${maxLength}`}
+        </p>
+      ) : null}
+      {showHintRow ? (
+        <p id={hintId} className={styles.hint}>
+          {hint}
+        </p>
+      ) : null}
+      {showErrorRow ? (
+        <p id={errorId} className={styles.error} role="alert">
+          {errorMessage}
+        </p>
+      ) : null}
+    </div>
+  );
+};
+
+===== src/components/molecules/Tooltip/Tooltip.tsx =====
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
+import styles from './Tooltip.module.css';
+
+export type TooltipProps = {
+  content: string;
+  children: ReactNode;
+  position?: 'top' | 'bottom' | 'left' | 'right';
+  delay?: number;
+};
+
+const positionClassMap = {
+  top: styles.posTop,
+  bottom: styles.posBottom,
+  left: styles.posLeft,
+  right: styles.posRight,
+} as const;
+
+export const Tooltip = ({
+  content,
+  children,
+  position = 'top',
+  delay = 200,
+}: TooltipProps) => {
+  const tooltipId = useId();
+  const [visible, setVisible] = useState(false);
+  const showTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearShowTimeout = useCallback(() => {
+    if (showTimeoutRef.current != null) {
+      clearTimeout(showTimeoutRef.current);
+      showTimeoutRef.current = null;
+    }
+  }, []);
+
+  const scheduleShow = useCallback(() => {
+    clearShowTimeout();
+    showTimeoutRef.current = setTimeout(() => {
+      setVisible(true);
+      showTimeoutRef.current = null;
+    }, delay);
+  }, [clearShowTimeout, delay]);
+
+  const hide = useCallback(() => {
+    clearShowTimeout();
+    setVisible(false);
+  }, [clearShowTimeout]);
+
+  useEffect(() => () => clearShowTimeout(), [clearShowTimeout]);
+
+  const bubbleClass = [
+    styles.bubble,
+    positionClassMap[position],
+    visible ? styles.bubbleVisible : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  return (
+    <span
+      className={styles.wrap}
+      onMouseEnter={scheduleShow}
+      onMouseLeave={hide}
+      onFocusCapture={scheduleShow}
+      onBlurCapture={hide}
+    >
+      {children}
+      <span
+        id={tooltipId}
+        className={bubbleClass}
+        role="tooltip"
+        aria-hidden={!visible}
+      >
+        {content}
+      </span>
+    </span>
+  );
+};
+
+===== src/components/organisms/AccordionItem/AccordionItem.tsx =====
+import { useId, useState } from 'react';
+import styles from './AccordionItem.module.css';
+
+export type AccordionItemProps = {
+  title: string;
+  body: string;
+  defaultOpen?: boolean;
+};
+
+export const AccordionItem = ({
+  title,
+  body,
+  defaultOpen = false,
+}: AccordionItemProps) => {
+  const [open, setOpen] = useState(defaultOpen);
+  const contentId = useId();
+  const titleId = useId();
+
+  return (
+    <div
+      className={[styles.root, open ? styles.expanded : ''].filter(Boolean).join(' ')}
+    >
+      <button
+        type="button"
+        className={styles.header}
+        aria-expanded={open}
+        aria-controls={contentId}
+        onClick={() => setOpen((v) => !v)}
+      >
+        <span id={titleId} className={styles.title}>
+          {title}
+        </span>
+        <span
+          className={[styles.icon, open ? styles.iconOpen : ''].filter(Boolean).join(' ')}
+          aria-hidden
+        >
+          <span className={styles.plus} />
+        </span>
+      </button>
+      <div
+        id={contentId}
+        className={styles.body}
+        role="region"
+        aria-labelledby={titleId}
+      >
+        {body}
+      </div>
+    </div>
+  );
+};
+
+===== src/components/organisms/Alert/Alert.tsx =====
+import { useCallback, useState, type TransitionEvent } from 'react';
+import styles from './Alert.module.css';
+
+export type AlertProps = {
+  message: string;
+  variant?: 'success' | 'error' | 'warning' | 'info';
+  title?: string;
+  dismissible?: boolean;
+  onDismiss?: () => void;
+};
+
+const variantRootMap = {
+  success: styles.variantSuccess,
+  error: styles.variantError,
+  warning: styles.variantWarning,
+  info: styles.variantInfo,
+} as const;
+
+const variantIconMap = {
+  success: styles.iconSuccess,
+  error: styles.iconError,
+  warning: styles.iconWarning,
+  info: styles.iconInfo,
+} as const;
+
+const iconLetter: Record<NonNullable<AlertProps['variant']>, string> = {
+  success: 'S',
+  error: 'E',
+  warning: 'W',
+  info: 'i',
+};
+
+export const Alert = ({
+  message,
+  variant = 'info',
+  title,
+  dismissible = false,
+  onDismiss,
+}: AlertProps) => {
+  const [exiting, setExiting] = useState(false);
+  const [unmounted, setUnmounted] = useState(false);
+
+  const handleTransitionEnd = useCallback(
+    (e: TransitionEvent<HTMLDivElement>) => {
+      if (e.propertyName !== 'opacity') return;
+      if (!exiting) return;
+      setUnmounted(true);
+      onDismiss?.();
+    },
+    [exiting, onDismiss],
+  );
+
+  const handleDismiss = () => {
+    setExiting(true);
+  };
+
+  if (unmounted) {
+    return null;
+  }
+
+  const rootClass = [
+    styles.root,
+    variantRootMap[variant],
+    exiting ? styles.rootDismissed : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const iconClass = [styles.icon, variantIconMap[variant]].join(' ');
+
+  return (
+    <div
+      className={rootClass}
+      role="alert"
+      onTransitionEnd={handleTransitionEnd}
+    >
+      <span className={iconClass} aria-hidden="true">
+        {iconLetter[variant]}
+      </span>
+      <div className={styles.body}>
+        {title != null ? <p className={styles.title}>{title}</p> : null}
+        <p className={styles.message}>{message}</p>
+      </div>
+      {dismissible ? (
+        <button
+          type="button"
+          className={styles.dismiss}
+          aria-label="Dismiss alert"
+          onClick={handleDismiss}
+        >
+          ×
+        </button>
+      ) : null}
+    </div>
+  );
+};
+
+===== src/components/organisms/Banner/Banner.tsx =====
+import { Button } from '../../atoms/Button/Button';
+import styles from './Banner.module.css';
+
+export type BannerProps = {
+  imageSrc?: string;
+  subtitle?: string;
+  title: string;
+  description?: string;
+  ctaLabel?: string;
+  ctaHref?: string;
+  onCtaClick?: () => void;
+  height?: string;
+  align?: 'left' | 'center';
+  /** When false, the dark gradient overlay over the image/fallback is omitted. */
+  showOverlay?: boolean;
+};
+
+export const Banner = ({
+  imageSrc,
+  subtitle,
+  title,
+  description,
+  ctaLabel,
+  ctaHref,
+  onCtaClick,
+  height,
+  align = 'left',
+  showOverlay = true,
+}: BannerProps) => {
+  const bannerStyle =
+    height !== undefined && height.length > 0
+      ? { height, minHeight: height }
+      : undefined;
+
+  const innerClass = [
+    styles.inner,
+    align === 'center' ? styles.innerCenter : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  return (
+    <header className={styles.banner} style={bannerStyle}>
+      {imageSrc != null && imageSrc.length > 0 ? (
+        <img className={styles.bgImage} src={imageSrc} alt="" />
+      ) : (
+        <div className={styles.bgFallback} aria-hidden />
+      )}
+      {showOverlay ? <div className={styles.overlay} aria-hidden /> : null}
+      <div className={styles.content}>
+        <div className={innerClass}>
+          {subtitle != null ? (
+            <p className={styles.subtitle}>{subtitle}</p>
+          ) : null}
+          <h1 className={styles.title}>{title}</h1>
+          {description != null ? (
+            <p className={styles.description}>{description}</p>
+          ) : null}
+          {ctaLabel != null ? (
+            <div className={styles.cta}>
+              <Button
+                label={ctaLabel}
+                type="default"
+                colorScheme="information"
+                onClick={() => {
+                  onCtaClick?.();
+                  if (ctaHref != null) {
+                    window.location.href = ctaHref;
+                  }
+                }}
+              />
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </header>
+  );
+};
+
+===== src/components/organisms/Card/Card.tsx =====
+import type { ReactNode } from 'react';
+import styles from './Card.module.css';
+
+export type CardProps = {
+  title?: string;
+  titleColor?: 'primary' | 'information';
+  imageSrc?: string;
+  imageAlt?: string;
+  children?: ReactNode;
+  footer?: ReactNode;
+  variant?: 'default' | 'highlighted';
+  width?: string;
+};
+
+export const Card = ({
+  title,
+  titleColor = 'primary',
+  imageSrc,
+  imageAlt,
+  children,
+  footer,
+  variant = 'default',
+  width,
+}: CardProps) => {
+  const rootClass = [
+    styles.root,
+    variant === 'highlighted' ? styles.highlighted : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const titleClass = [
+    styles.title,
+    titleColor === 'information' ? styles.titleInformation : styles.titlePrimary,
+  ].join(' ');
+
+  return (
+    <div
+      className={rootClass}
+      style={width !== undefined ? { width } : undefined}
+    >
+      <div className={styles.inner}>
+        {title != null ? <h2 className={titleClass}>{title}</h2> : null}
+        {imageSrc != null ? (
+          <img
+            className={styles.image}
+            src={imageSrc}
+            alt={imageAlt ?? ''}
+          />
+        ) : null}
+        {children != null ? <div className={styles.content}>{children}</div> : null}
+        {footer != null ? <div className={styles.footer}>{footer}</div> : null}
+      </div>
+    </div>
+  );
+};
+
+===== src/components/organisms/ErrorPage/ErrorPage.tsx =====
+import { useId } from 'react';
+import { Button } from '../../atoms/Button/Button';
+import styles from './ErrorPage.module.css';
+
+export type ErrorPageProps = {
+  code?: '404' | '500' | '403';
+  title?: string;
+  description?: string;
+  ctaLabel?: string;
+  onCtaClick?: () => void;
+  ctaHref?: string;
+};
+
+const defaultTitles: Record<NonNullable<ErrorPageProps['code']>, string> = {
+  '404': 'Page Not Found',
+  '500': 'Something Went Wrong',
+  '403': 'Access Denied',
+};
+
+export const ErrorPage = ({
+  code = '404',
+  title,
+  description,
+  ctaLabel = 'Go Back Home',
+  onCtaClick,
+  ctaHref,
+}: ErrorPageProps) => {
+  const titleId = useId();
+  const resolvedTitle = title ?? defaultTitles[code];
+
+  return (
+    <section className={styles.root} aria-labelledby={titleId}>
+      <div className={styles.stack}>
+        <div className={styles.textBlock}>
+          <p className={styles.code} aria-hidden="true">
+            {code}
+          </p>
+          <h1 id={titleId} className={styles.title}>
+            {resolvedTitle}
+          </h1>
+          {description != null ? (
+            <p className={styles.description}>{description}</p>
+          ) : null}
+        </div>
+        <div className={styles.cta}>
+          <Button
+            label={ctaLabel}
+            type="default"
+            onClick={() => {
+              onCtaClick?.();
+              if (ctaHref != null) {
+                window.location.href = ctaHref;
+              }
+            }}
+          />
+        </div>
+      </div>
+    </section>
+  );
+};
+
+===== src/components/organisms/Footer/Footer.tsx =====
+import { Button } from '../../atoms/Button/Button';
+import { SocialButton } from '../../molecules/SocialButton/SocialButton';
+import styles from './Footer.module.css';
+
+export type FooterColumnLink = { label: string; href: string };
+
+export type FooterColumn = { heading: string; links: FooterColumnLink[] };
+
+export type FooterProps = {
+  columns?: FooterColumn[];
+  socialLinks?: { platform: string; href: string }[];
+  copyrightText?: string;
+  logoSrc?: string;
+  onSubscribe?: () => void;
+};
+
+export const CWPC_LOGO_SRC_DEFAULT =
+  'https://www.figma.com/api/mcp/asset/ec8b27e0-6682-46b5-9d3e-915a870260bb';
+
+const defaultColumns: FooterColumn[] = [
+  {
+    heading: 'Company',
+    links: [
+      { label: 'Home', href: '/' },
+      { label: 'About', href: '/about' },
+      { label: 'Sponsor', href: '/sponsor' },
+      { label: 'Contact', href: '/contact' },
+    ],
+  },
+  {
+    heading: 'Scorecard',
+    links: [
+      { label: 'Scorecard Home', href: '/scorecard' },
+      { label: 'Scorecard Instructions', href: '/scorecard/instructions' },
+      { label: 'Scorecard FAQs', href: '/scorecard/faqs' },
+      { label: 'About Scorecard', href: '/scorecard/about' },
+    ],
+  },
+  {
+    heading: 'Showcase',
+    links: [
+      { label: 'Innovations', href: '/showcase/innovations' },
+      { label: 'Presentations', href: '/showcase/presentations' },
+    ],
+  },
+];
+
+const defaultSocialLinks: { platform: string; href: string }[] = [
+  { platform: 'linkedin', href: 'https://www.linkedin.com/' },
+  { platform: 'facebook', href: 'https://www.facebook.com/' },
+  { platform: 'youtube', href: 'https://www.youtube.com/' },
+  { platform: 'tiktok', href: 'https://www.tiktok.com/' },
+  { platform: 'instagram', href: 'https://www.instagram.com/' },
+  { platform: 'share', href: 'https://example.com/share' },
+];
+
+const socialPlatforms = [
+  'facebook',
+  'twitter',
+  'linkedin',
+  'youtube',
+  'instagram',
+  'tiktok',
+  'share',
+] as const;
+
+type SocialPlatform = (typeof socialPlatforms)[number];
+
+function isSocialPlatform(p: string): p is SocialPlatform {
+  return socialPlatforms.includes(p.toLowerCase() as SocialPlatform);
+}
+
+export const Footer = ({
+  columns = defaultColumns,
+  socialLinks = defaultSocialLinks,
+  copyrightText = '© Catastrophic Wildfire Prevention Consortium. All rights reserved.',
+  logoSrc,
+  onSubscribe,
+}: FooterProps) => {
+  const resolvedLogo = logoSrc ?? CWPC_LOGO_SRC_DEFAULT;
+
+  return (
+    <footer className={styles.root}>
+      <div className={styles.row}>
+        <div className={styles.brandColumn}>
+          <a className={styles.logoLink} href="/">
+            <img
+              className={styles.logoImage}
+              src={resolvedLogo}
+              alt="Catastrophic Wildfire Prevention Consortium"
+            />
+          </a>
+          <p className={styles.copyright}>{copyrightText}</p>
+        </div>
+
+        {columns.map((column) => (
+          <div key={column.heading} className={styles.linkColumn}>
+            <h2 className={styles.columnHeading}>{column.heading}</h2>
+            <ul className={styles.linkList}>
+              {column.links.map((link) => (
+                <li key={link.href} className={styles.linkItem}>
+                  <a className={styles.columnLink} href={link.href}>
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+
+        <div className={styles.followColumn}>
+          <h2 className={styles.columnHeading}>Follow Us</h2>
+          <div className={styles.socialRow}>
+            {socialLinks.map(({ platform, href }) => {
+              const key = `${platform}-${href}`;
+              if (isSocialPlatform(platform)) {
+                return (
+                  <SocialButton
+                    key={key}
+                    platform={platform.toLowerCase() as SocialPlatform}
+                    href={href}
+                    variant="brand"
+                    size="xs"
+                  />
+                );
+              }
+              return (
+                <a key={key} className={styles.fallbackSocial} href={href}>
+                  {platform}
+                </a>
+              );
+            })}
+          </div>
+          <div className={styles.subscribeWrap}>
+            <Button
+              label="Subscribe"
+              type="default"
+              onClick={onSubscribe}
+            />
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+===== src/components/organisms/Forms/Forms.tsx =====
+import type { ReactNode } from 'react';
+import { Button } from '../../atoms/Button/Button';
+import { Card } from '../Card/Card';
+import { Input } from '../../molecules/Input/Input';
+import styles from './Forms.module.css';
+
+export type FormField = {
+  label: string;
+  type: 'text' | 'email' | 'password';
+  required?: boolean;
+  hint?: string;
+  iconType?: 'default' | 'email';
+};
+
+export type FormsProps = {
+  title?: string;
+  description?: string;
+  fields: FormField[];
+  checkboxLabels?: string[];
+  primaryButtonLabel?: string;
+  secondaryButtonLabel?: string;
+  footerText?: string;
+  footerLinkText?: string;
+  onSubmit?: () => void;
+  onClose?: () => void;
+};
+
+const formsInfoIcon = (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden
+  >
+    <path
+      d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
+const formsMailIcon = (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden
+  >
+    <path
+      d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
+export const Forms = ({
+  title,
+  description,
+  fields,
+  checkboxLabels,
+  primaryButtonLabel,
+  secondaryButtonLabel,
+  footerText,
+  footerLinkText,
+  onSubmit,
+  onClose,
+}: FormsProps) => {
+  const footerNode: ReactNode =
+    footerText != null || footerLinkText != null ? (
+      <p className={styles.footerText}>
+        {footerText != null ? <>{footerText} </> : null}
+        {footerLinkText != null ? (
+          <a className={styles.footerLink} href="#">
+            {footerLinkText}
+          </a>
+        ) : null}
+      </p>
+    ) : null;
+
+  return (
+    <Card footer={footerNode}>
+      {title != null ? <h2 className={styles.formTitle}>{title}</h2> : null}
+      {description != null ? (
+        <p className={styles.description}>{description}</p>
+      ) : null}
+      <div className={styles.fields}>
+        {fields.map((field) => (
+          <Input
+            key={field.label}
+            label={field.label}
+            type={field.type}
+            required={field.required}
+            hint={field.hint}
+            showHintIcon={field.iconType === 'default'}
+            iconLeft={
+              field.iconType === 'email'
+                ? formsMailIcon
+                : field.iconType === 'default'
+                  ? formsInfoIcon
+                  : undefined
+            }
+            iconRight={field.iconType === 'default' ? formsInfoIcon : undefined}
+            width="100%"
+          />
+        ))}
+      </div>
+      {checkboxLabels != null && checkboxLabels.length > 0 ? (
+        <div className={styles.checkboxSection}>
+          {checkboxLabels.map((label) => (
+            <label key={label} className={styles.checkboxLabel}>
+              <input
+                className={styles.checkboxInput}
+                type="checkbox"
+                name={label}
+              />
+              {label}
+            </label>
+          ))}
+        </div>
+      ) : null}
+      {primaryButtonLabel != null || secondaryButtonLabel != null ? (
+        <div className={styles.buttonRow}>
+          {primaryButtonLabel != null ? (
+            <Button
+              label={primaryButtonLabel}
+              colorScheme="success"
+              onClick={onSubmit}
+            />
+          ) : null}
+          {secondaryButtonLabel != null ? (
+            <Button
+              label={secondaryButtonLabel}
+              type="default"
+              onClick={onClose}
+            />
+          ) : null}
+        </div>
+      ) : null}
+    </Card>
+  );
+};
+
+===== src/components/organisms/GridLayout/GridLayout.tsx =====
+import type { ReactNode } from 'react';
+import styles from './GridLayout.module.css';
+
+export type GridLayoutProps = {
+  children: ReactNode;
+  columns?: 1 | 2 | 3 | 4;
+  gap?: 'sm' | 'md' | 'lg';
+  responsive?: boolean;
+};
+
+const gapClassMap = {
+  sm: styles.gapSm,
+  md: styles.gapMd,
+  lg: styles.gapLg,
+} as const;
+
+const colsClassMap = {
+  1: styles.cols1,
+  2: styles.cols2,
+  3: styles.cols3,
+  4: styles.cols4,
+} as const;
+
+export const GridLayout = ({
+  children,
+  columns = 3,
+  gap = 'md',
+  responsive = true,
+}: GridLayoutProps) => {
+  const rootClass = [
+    styles.root,
+    gapClassMap[gap],
+    colsClassMap[columns],
+    responsive ? styles.responsive : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  return <div className={rootClass}>{children}</div>;
+};
+
+===== src/components/organisms/Menu/Menu.tsx =====
+import type { ReactNode } from 'react';
+import { MenuVariantContext } from './MenuItem';
+import styles from './Menu.module.css';
+
+export type MenuProps = {
+  children: ReactNode;
+  variant?: 'default' | 'compact';
+};
+
+export const Menu = ({
+  children,
+  variant = 'default',
+}: MenuProps) => {
+  return (
+    <MenuVariantContext.Provider value={variant}>
+      <div className={styles.menu}>{children}</div>
+    </MenuVariantContext.Provider>
+  );
+};
+
+===== src/components/organisms/Menu/MenuItem.tsx =====
+import { createContext, useContext, type ReactNode } from 'react';
+import styles from './Menu.module.css';
+
+export const MenuVariantContext = createContext<'default' | 'compact'>(
+  'default',
+);
+
+export type MenuItemProps = {
+  label: string;
+  href?: string;
+  onClick?: () => void;
+  iconLeft?: ReactNode;
+  active?: boolean;
+  disabled?: boolean;
+  badge?: string | number;
+};
+
+export const MenuItem = ({
+  label,
+  href,
+  onClick,
+  iconLeft,
+  active = false,
+  disabled = false,
+  badge,
+}: MenuItemProps) => {
+  const variant = useContext(MenuVariantContext);
+
+  const rootClass = [
+    styles.item,
+    variant === 'compact' ? styles.itemCompact : styles.itemDefault,
+    active ? styles.active : '',
+    disabled ? styles.disabled : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const labelClass = [styles.label, active ? styles.labelActive : ''].join(' ');
+
+  const content = (
+    <>
+      {iconLeft != null ? (
+        <span className={styles.iconWrap} aria-hidden={true}>
+          {iconLeft}
+        </span>
+      ) : null}
+      <span className={labelClass}>{label}</span>
+      {badge != null ? (
+        <span className={styles.badge}>{badge}</span>
+      ) : null}
+    </>
+  );
+
+  if (disabled) {
+    return (
+      <span className={rootClass} aria-disabled="true">
+        {content}
+      </span>
+    );
+  }
+
+  if (href != null) {
+    return (
+      <a
+        className={rootClass}
+        href={href}
+        aria-current={active ? 'page' : undefined}
+      >
+        {content}
+      </a>
+    );
+  }
+
+  if (onClick != null) {
+    return (
+      <button
+        type="button"
+        className={rootClass}
+        aria-current={active ? 'page' : undefined}
+        onClick={onClick}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <span className={rootClass} aria-current={active ? 'page' : undefined}>
+      {content}
+    </span>
+  );
+};
+
+===== src/components/organisms/Modal/Modal.tsx =====
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type MouseEvent,
+  type ReactNode,
+  type TransitionEvent,
+} from 'react';
+import { createPortal } from 'react-dom';
+import styles from './Modal.module.css';
+
+export type ModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  title?: string;
+  children: ReactNode;
+  size?: 'sm' | 'md' | 'lg';
+  showCloseButton?: boolean;
+  /** Light surface for marketing / registration flows (default: dark dialog). */
+  surface?: 'dark' | 'light';
+};
+
+const sizeClassMap = {
+  sm: styles.sizeSm,
+  md: styles.sizeMd,
+  lg: styles.sizeLg,
+} as const;
+
+export const Modal = ({
+  isOpen,
+  onClose,
+  title,
+  children,
+  size = 'md',
+  showCloseButton = true,
+  surface = 'dark',
+}: ModalProps) => {
+  const titleId = useId();
+  const [shouldRender, setShouldRender] = useState(false);
+  const [active, setActive] = useState(false);
+  const closingRef = useRef(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    closingRef.current = false;
+    const id = requestAnimationFrame(() => {
+      setShouldRender(true);
+      requestAnimationFrame(() => setActive(true));
+    });
+    return () => cancelAnimationFrame(id);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen) return;
+    if (!shouldRender) return;
+    closingRef.current = true;
+    const id = requestAnimationFrame(() => setActive(false));
+    return () => cancelAnimationFrame(id);
+  }, [isOpen, shouldRender]);
+
+  useEffect(() => {
+    if (!shouldRender) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [shouldRender]);
+
+  const handleDialogTransitionEnd = useCallback(
+    (e: TransitionEvent<HTMLDivElement>) => {
+      if (e.target !== e.currentTarget) return;
+      if (e.propertyName !== 'opacity') return;
+      if (closingRef.current && !active) {
+        setShouldRender(false);
+        closingRef.current = false;
+      }
+    },
+    [active],
+  );
+
+  const handleClose = useCallback(() => {
+    onClose();
+  }, [onClose]);
+
+  const handleBackdropMouseDown = (e: MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      handleClose();
+    }
+  };
+
+  if (!shouldRender) {
+    return null;
+  }
+
+  const backdropClass = [styles.backdrop, active ? styles.backdropOpen : '']
+    .filter(Boolean)
+    .join(' ');
+
+  const dialogClass = [
+    styles.dialog,
+    sizeClassMap[size],
+    surface === 'light' ? styles.dialogLight : '',
+    active ? styles.dialogOpen : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  return createPortal(
+    <div
+      className={backdropClass}
+      role="presentation"
+      onMouseDown={handleBackdropMouseDown}
+    >
+      <div
+        className={dialogClass}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title != null ? titleId : undefined}
+        onMouseDown={(e) => e.stopPropagation()}
+        onTransitionEnd={handleDialogTransitionEnd}
+      >
+        <div className={styles.header}>
+          {title != null ? (
+            <h2 id={titleId} className={styles.title}>
+              {title}
+            </h2>
+          ) : (
+            <span />
+          )}
+          {showCloseButton ? (
+            <button
+              type="button"
+              className={styles.close}
+              aria-label="Close dialog"
+              onClick={handleClose}
+            >
+              ×
+            </button>
+          ) : null}
+        </div>
+        <div className={styles.body}>{children}</div>
+      </div>
+    </div>,
+    document.body,
+  );
+};
+
+===== src/components/organisms/Navbar/Navbar.tsx =====
+import styles from './Navbar.module.css';
+
+export type NavItem = {
+  label: string;
+  href: string;
+  hasDropdown?: boolean;
+};
+
+export type NavbarProps = {
+  items: NavItem[];
+  activeHref?: string;
+  logoSrc?: string;
+};
+
+export const Navbar = ({ items, activeHref, logoSrc }: NavbarProps) => {
+  return (
+    <header className={styles.root}>
+      <a className={styles.logoLink} href="/">
+        {logoSrc != null && logoSrc.length > 0 ? (
+          <img
+            className={styles.logoImage}
+            src={logoSrc}
+            alt="Catastrophic Wildfire Prevention Consortium"
+          />
+        ) : (
+          <span className={styles.logoText}>CWPC</span>
+        )}
+      </a>
+      <nav className={styles.nav} aria-label="Primary">
+        {items.map((item) => {
+          const isActive = activeHref != null && item.href === activeHref;
+          const linkClass = [styles.link, isActive ? styles.linkActive : '']
+            .filter(Boolean)
+            .join(' ');
+          return (
+            <a key={item.href} className={linkClass} href={item.href}>
+              <span className={styles.linkLabel}>{item.label}</span>
+              {item.hasDropdown === true ? (
+                <span className={styles.dropdownMark} aria-hidden>
+                  ▾
+                </span>
+              ) : null}
+            </a>
+          );
+        })}
+      </nav>
+    </header>
+  );
+};
+
+===== src/components/organisms/Panel/Panel.tsx =====
+import { useEffect, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
+import styles from './Panel.module.css';
+
+export type PanelProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  title?: string;
+  children: ReactNode;
+  side?: 'left' | 'right';
+  width?: string;
+  showOverlay?: boolean;
+};
+
+export const Panel = ({
+  isOpen,
+  onClose,
+  title,
+  children,
+  side = 'right',
+  width,
+  showOverlay = true,
+}: PanelProps) => {
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [isOpen, onClose]);
+
+  const panelClass = [
+    styles.panel,
+    isOpen ? styles.panelOpen : '',
+    side === 'left' ? styles.sideLeft : styles.sideRight,
+    isOpen && side === 'left' ? styles.sideLeftOpen : '',
+    isOpen && side === 'right' ? styles.sideRightOpen : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const node = (
+    <>
+      {showOverlay ? (
+        <div
+          className={[styles.backdrop, isOpen ? styles.backdropVisible : '']
+            .filter(Boolean)
+            .join(' ')}
+          aria-hidden={!isOpen}
+          onClick={() => isOpen && onClose()}
+        />
+      ) : null}
+      <aside
+        className={panelClass}
+        style={width !== undefined ? { width } : undefined}
+        aria-hidden={!isOpen}
+        aria-modal={isOpen}
+        role="dialog"
+      >
+        <div className={styles.header}>
+          {title != null ? <h2 className={styles.title}>{title}</h2> : <span />}
+          <button
+            type="button"
+            className={styles.closeBtn}
+            aria-label="Close panel"
+            onClick={onClose}
+          >
+            ×
+          </button>
+        </div>
+        <div className={styles.body}>{children}</div>
+      </aside>
+    </>
+  );
+
+  if (typeof document === 'undefined') {
+    return null;
+  }
+
+  return createPortal(node, document.body);
+};
+
+===== src/components/organisms/ProfileCard/ProfileCard.tsx =====
+import { Avatar } from '../../atoms/Avatar/Avatar';
+import { Button } from '../../atoms/Button/Button';
+import styles from './ProfileCard.module.css';
+
+export type ProfileCardProps = {
+  avatarSrc?: string;
+  name: string;
+  role: string;
+  company?: string;
+  companyLogoSrc?: string;
+  location?: string;
+  linkedinUrl?: string;
+  videoThumbnailSrc?: string;
+  videoUrl?: string;
+  ctaLabel?: string;
+  onCtaClick?: () => void;
+  description?: string;
+  variant?: 'compact' | 'full';
+};
+
+export const ProfileCard = ({
+  avatarSrc,
+  name,
+  role,
+  company,
+  companyLogoSrc,
+  location,
+  linkedinUrl,
+  videoThumbnailSrc,
+  videoUrl,
+  ctaLabel = 'View Presentation Slides',
+  onCtaClick,
+  description,
+  variant = 'full',
+}: ProfileCardProps) => {
+  const isFull = variant === 'full';
+
+  const mediaContent =
+    videoThumbnailSrc != null && videoThumbnailSrc.length > 0 ? (
+      <img
+        className={styles.thumbnail}
+        src={videoThumbnailSrc}
+        alt=""
+      />
+    ) : (
+      <div className={styles.thumbnailFallback} aria-hidden />
+    );
+
+  const media =
+    videoUrl != null && videoUrl.length > 0 ? (
+      <a
+        className={styles.mediaLink}
+        href={videoUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {mediaContent}
+      </a>
+    ) : (
+      <div className={styles.mediaStatic}>{mediaContent}</div>
+    );
+
+  const rootClass = [
+    styles.root,
+    isFull ? styles.rootFull : styles.rootCompact,
+  ].join(' ');
+
+  return (
+    <article className={rootClass}>
+      <div className={styles.left}>
+        <div className={styles.topRow}>
+          <Avatar
+            src={avatarSrc}
+            name={name}
+            alt=""
+            size="lg"
+            variant="circle"
+          />
+          <div className={styles.brandRow}>
+            {linkedinUrl != null && linkedinUrl.length > 0 ? (
+              <a
+                className={styles.linkedinBadge}
+                href={linkedinUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`${name} on LinkedIn`}
+              >
+                in
+              </a>
+            ) : null}
+            {companyLogoSrc != null && companyLogoSrc.length > 0 ? (
+              <img
+                className={styles.companyLogo}
+                src={companyLogoSrc}
+                alt=""
+              />
+            ) : null}
+          </div>
+        </div>
+        <h2 className={styles.name}>{name}</h2>
+        <p className={styles.role}>{role}</p>
+        {company != null && company.length > 0 ? (
+          <p className={styles.company}>{company}</p>
+        ) : null}
+        {location != null && location.length > 0 ? (
+          <p className={styles.location}>{location}</p>
+        ) : null}
+        {description != null && description.length > 0 ? (
+          <p className={styles.description}>{description}</p>
+        ) : null}
+      </div>
+
+      {isFull ? (
+        <>
+          <div className={styles.media}>{media}</div>
+          <div className={styles.ctaSlot}>
+            <Button label={ctaLabel} type="default" onClick={onCtaClick} />
+          </div>
+        </>
+      ) : (
+        <div className={styles.ctaSlotCompact}>
+          <Button label={ctaLabel} type="default" onClick={onCtaClick} />
+        </div>
+      )}
+    </article>
+  );
+};
+
+===== src/components/organisms/RegistrationModal/RegistrationModal.tsx =====
+import { useEffect, useId, useState } from 'react';
+import { Button } from '../../atoms/Button/Button';
+import { Alert } from '../Alert/Alert';
+import { Modal } from '../Modal/Modal';
+import styles from './RegistrationModal.module.css';
+
+export type RegistrationModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  title?: string;
+  description?: string;
+  onSubscribe?: (email: string) => void;
+  successMessage?: string;
+};
+
+const defaultTitle =
+  'Registration is currently closed. Get notified when it opens!';
+
+function isValidEmail(value: string): boolean {
+  const t = value.trim();
+  return t.includes('@') && t.includes('.');
+}
+
+export const RegistrationModal = ({
+  isOpen,
+  onClose,
+  title = defaultTitle,
+  description,
+  onSubscribe,
+  successMessage = "You're on the list. We'll email you when registration opens.",
+}: RegistrationModalProps) => {
+  const emailId = useId();
+  const [email, setEmail] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setSubmitted(false);
+      setEmail('');
+    }
+  }, [isOpen]);
+
+  const handleSubscribe = () => {
+    if (!isValidEmail(email)) {
+      return;
+    }
+    onSubscribe?.(email.trim());
+    setSubmitted(true);
+  };
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="sm"
+      surface="light"
+      showCloseButton
+      title={undefined}
+    >
+      <div className={styles.content}>
+        <h2 className={styles.title}>{title}</h2>
+        {description != null && description.length > 0 ? (
+          <p className={styles.description}>{description}</p>
+        ) : null}
+        {submitted ? (
+          <Alert variant="success" message={successMessage} />
+        ) : (
+          <>
+            <div className={styles.emailRow}>
+              <label className={styles.emailLabel} htmlFor={emailId}>
+                Email
+              </label>
+              <input
+                id={emailId}
+                className={styles.emailInput}
+                type="email"
+                name="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+              />
+            </div>
+            <div className={styles.subscribeSlot}>
+              <Button
+                label="Subscribe for Updates"
+                type="default"
+                onClick={handleSubscribe}
+              />
+            </div>
+          </>
+        )}
+      </div>
+    </Modal>
+  );
+};
+
+===== src/components/organisms/SecondaryNav/SecondaryNav.tsx =====
+import styles from './SecondaryNav.module.css';
+
+export type SecondaryNavItem = { label: string; href: string };
+
+export type SecondaryNavProps = {
+  items: SecondaryNavItem[];
+  activeHref?: string;
+};
+
+export const SecondaryNav = ({
+  items,
+  activeHref,
+}: SecondaryNavProps) => {
+  return (
+    <div className={styles.root}>
+      <nav className={styles.inner} aria-label="Section">
+        {items.map((item) => {
+          const isActive = activeHref != null && item.href === activeHref;
+          const linkClass = [styles.link, isActive ? styles.linkActive : '']
+            .filter(Boolean)
+            .join(' ');
+          return (
+            <a key={item.href} className={linkClass} href={item.href}>
+              {item.label}
+            </a>
+          );
+        })}
+      </nav>
+    </div>
+  );
+};
+
+===== src/components/organisms/SuccessScreen/SuccessScreen.tsx =====
+import { useId } from 'react';
+import { Button } from '../../atoms/Button/Button';
+import styles from './SuccessScreen.module.css';
+
+export type SuccessScreenProps = {
+  title?: string;
+  description?: string;
+  ctaLabel?: string;
+  onCtaClick?: () => void;
+  secondaryCtaLabel?: string;
+  onSecondaryCtaClick?: () => void;
+};
+
+export const SuccessScreen = ({
+  title = 'Success!',
+  description,
+  ctaLabel,
+  onCtaClick,
+  secondaryCtaLabel,
+  onSecondaryCtaClick,
+}: SuccessScreenProps) => {
+  const titleId = useId();
+
+  return (
+    <section className={styles.root} aria-labelledby={titleId}>
+      <div className={styles.stack}>
+        <div className={styles.iconWrap} aria-hidden>
+          <span className={styles.check}>✓</span>
+        </div>
+        <h1 id={titleId} className={styles.title}>
+          {title}
+        </h1>
+        {description != null ? (
+          <p className={styles.description}>{description}</p>
+        ) : null}
+        {(ctaLabel != null || secondaryCtaLabel != null) ? (
+          <div className={styles.actions}>
+            {ctaLabel != null ? (
+              <Button
+                label={ctaLabel}
+                type="default"
+                colorScheme="success"
+                onClick={onCtaClick}
+              />
+            ) : null}
+            {secondaryCtaLabel != null ? (
+              <Button
+                label={secondaryCtaLabel}
+                type="transparent"
+                onClick={onSecondaryCtaClick}
+              />
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+    </section>
+  );
+};
+
+===== src/components/organisms/Table/Table.tsx =====
+import {
+  useMemo,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
+import styles from './Table.module.css';
+
+export type TableColumn = {
+  key: string;
+  label: string;
+  sortable?: boolean;
+  width?: string;
+  align?: 'left' | 'center' | 'right';
+};
+
+export type TableProps = {
+  columns: TableColumn[];
+  rows: Record<string, ReactNode>[];
+  striped?: boolean;
+  caption?: string;
+  stickyHeader?: boolean;
+};
+
+type SortState = { key: string; dir: 'asc' | 'desc' };
+
+function sortValue(node: ReactNode): string {
+  if (node == null) return '';
+  if (
+    typeof node === 'string' ||
+    typeof node === 'number' ||
+    typeof node === 'boolean'
+  ) {
+    return String(node);
+  }
+  return '';
+}
+
+export const Table = ({
+  columns,
+  rows,
+  striped = false,
+  caption,
+  stickyHeader = false,
+}: TableProps) => {
+  const [sortState, setSortState] = useState<SortState | null>(null);
+
+  const sortedRows = useMemo(() => {
+    if (sortState == null) return rows;
+    const col = columns.find((c) => c.key === sortState.key);
+    if (!col?.sortable) return rows;
+    const { key, dir } = sortState;
+    return [...rows].sort((a, b) => {
+      const cmp = sortValue(a[key]).localeCompare(
+        sortValue(b[key]),
+        undefined,
+        { numeric: true, sensitivity: 'base' },
+      );
+      return dir === 'asc' ? cmp : -cmp;
+    });
+  }, [rows, columns, sortState]);
+
+  const handleSort = (columnKey: string, sortable?: boolean) => {
+    if (!sortable) return;
+    setSortState((prev) => {
+      if (prev?.key === columnKey) {
+        return { key: columnKey, dir: prev.dir === 'asc' ? 'desc' : 'asc' };
+      }
+      return { key: columnKey, dir: 'asc' };
+    });
+  };
+
+  const tableClass = [styles.table, stickyHeader ? styles.stickyHeader : '']
+    .filter(Boolean)
+    .join(' ');
+
+  return (
+    <div className={styles.wrapper}>
+      <table className={tableClass}>
+        {caption != null ? (
+          <caption className={styles.caption}>{caption}</caption>
+        ) : null}
+        <thead>
+          <tr className={styles.headRow}>
+            {columns.map((col) => {
+              const isSorted = sortState?.key === col.key;
+              const sortIcon =
+                col.sortable != null && col.sortable ? (
+                  <span
+                    className={
+                      isSorted ? styles.sortIconsActive : styles.sortIcons
+                    }
+                    aria-hidden="true"
+                  >
+                    {isSorted && sortState != null
+                      ? sortState.dir === 'asc'
+                        ? '↑'
+                        : '↓'
+                      : '↑↓'}
+                  </span>
+                ) : null;
+
+              const thStyle: CSSProperties = {
+                textAlign: col.align ?? 'left',
+                ...(col.width != null ? { width: col.width } : {}),
+              };
+
+              const thClass = [
+                styles.th,
+                col.sortable ? styles.thSortable : '',
+              ]
+                .filter(Boolean)
+                .join(' ');
+
+              return (
+                <th key={col.key} className={thClass} style={thStyle}>
+                  {col.sortable ? (
+                    <button
+                      type="button"
+                      className={styles.headerButton}
+                      onClick={() => handleSort(col.key, col.sortable)}
+                    >
+                      {col.label}
+                      {sortIcon}
+                    </button>
+                  ) : (
+                    col.label
+                  )}
+                </th>
+              );
+            })}
+          </tr>
+        </thead>
+        <tbody>
+          {sortedRows.map((row, rowIndex) => {
+            const rowClass = [styles.row, striped ? styles.rowStriped : '']
+              .filter(Boolean)
+              .join(' ');
+            return (
+              <tr key={rowIndex} className={rowClass}>
+                {columns.map((col) => (
+                  <td
+                    key={col.key}
+                    className={styles.td}
+                    style={{ textAlign: col.align ?? 'left' }}
+                  >
+                    {row[col.key]}
+                  </td>
+                ))}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+===== src/components/organisms/Toast/Toast.tsx =====
+import {
+  useEffect,
+  useRef,
+  useState,
+  type TransitionEvent,
+} from 'react';
+import styles from './Toast.module.css';
+
+export type ToastVariant = 'success' | 'error' | 'warning' | 'info';
+
+export type ToastItemData = {
+  id: string;
+  message: string;
+  variant?: ToastVariant;
+  duration?: number;
+  title?: string;
+};
+
+type ToastViewProps = {
+  item: ToastItemData;
+  slideFrom: 'left' | 'right';
+  onDismissed: (id: string) => void;
+};
+
+const railClassMap = {
+  success: styles.railSuccess,
+  error: styles.railError,
+  warning: styles.railWarning,
+  info: styles.railInfo,
+} as const;
+
+function motionClass(
+  slide: 'left' | 'right',
+  phase: 'enter' | 'idle' | 'exit',
+): string {
+  if (slide === 'right') {
+    if (phase === 'enter') return styles.motionRightEnter;
+    if (phase === 'idle') return styles.motionRightIdle;
+    return styles.motionRightExit;
+  }
+  if (phase === 'enter') return styles.motionLeftEnter;
+  if (phase === 'idle') return styles.motionLeftIdle;
+  return styles.motionLeftExit;
+}
+
+export function ToastView({ item, slideFrom, onDismissed }: ToastViewProps) {
+  const variant = item.variant ?? 'info';
+  const [phase, setPhase] = useState<'enter' | 'idle' | 'exit'>('enter');
+  const phaseRef = useRef(phase);
+  phaseRef.current = phase;
+  const exitingRef = useRef(false);
+  const removedRef = useRef(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dismissRef = useRef<() => void>(() => {});
+
+  dismissRef.current = () => {
+    if (exitingRef.current) return;
+    exitingRef.current = true;
+    if (timeoutRef.current != null) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    setPhase('exit');
+  };
+
+  const handleTransitionEnd = (e: TransitionEvent<HTMLDivElement>) => {
+    if (e.propertyName !== 'opacity') return;
+    if (phaseRef.current !== 'exit' || removedRef.current) return;
+    removedRef.current = true;
+    onDismissed(item.id);
+  };
+
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => {
+      requestAnimationFrame(() => setPhase('idle'));
+    });
+    timeoutRef.current = setTimeout(
+      () => dismissRef.current(),
+      item.duration ?? 4000,
+    );
+    return () => {
+      cancelAnimationFrame(raf);
+      if (timeoutRef.current != null) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [item.duration]);
+
+  const rootClass = [styles.root, motionClass(slideFrom, phase)].join(' ');
+  const railClass = [styles.rail, railClassMap[variant]].join(' ');
+
+  return (
+    <div
+      className={rootClass}
+      role="status"
+      aria-live="polite"
+      onTransitionEnd={handleTransitionEnd}
+    >
+      <span className={railClass} aria-hidden="true" />
+      <div className={styles.body}>
+        {item.title != null ? (
+          <p className={styles.title}>{item.title}</p>
+        ) : null}
+        <p className={styles.message}>{item.message}</p>
+      </div>
+      <button
+        type="button"
+        className={styles.dismiss}
+        aria-label="Dismiss notification"
+        onClick={() => dismissRef.current()}
+      >
+        ×
+      </button>
+    </div>
+  );
+}
+
+===== src/components/organisms/Toast/ToastProvider.tsx =====
+import {
+  createContext,
+  useCallback,
+  useState,
+  type ReactNode,
+} from 'react';
+import { createPortal } from 'react-dom';
+import { ToastView, type ToastItemData, type ToastVariant } from './Toast';
+import styles from './Toast.module.css';
+
+export type ToastProviderProps = {
+  children: ReactNode;
+  position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
+};
+
+export type ToastContextValue = {
+  addToast: (
+    message: string,
+    variant?: ToastVariant,
+    title?: string,
+    duration?: number,
+  ) => void;
+};
+
+export const ToastContext = createContext<ToastContextValue | null>(null);
+
+const containerClassMap = {
+  'top-right': styles.posTopRight,
+  'top-left': styles.posTopLeft,
+  'bottom-right': styles.posBottomRight,
+  'bottom-left': styles.posBottomLeft,
+} as const;
+
+export function ToastProvider({
+  children,
+  position = 'top-right',
+}: ToastProviderProps) {
+  const [items, setItems] = useState<ToastItemData[]>([]);
+
+  const remove = useCallback((id: string) => {
+    setItems((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  const addToast = useCallback(
+    (
+      message: string,
+      variant: ToastVariant = 'info',
+      title?: string,
+      duration?: number,
+    ) => {
+      const id =
+        typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `toast-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      setItems((prev) => [
+        ...prev,
+        { id, message, variant, title, duration },
+      ]);
+    },
+    [],
+  );
+
+  const slideFrom =
+    position === 'top-right' || position === 'bottom-right'
+      ? 'right'
+      : 'left';
+
+  const containerClass = [styles.container, containerClassMap[position]].join(
+    ' ',
+  );
+
+  return (
+    <ToastContext.Provider value={{ addToast }}>
+      {children}
+      {createPortal(
+        <div className={containerClass}>
+          {items.map((item) => (
+            <ToastView
+              key={item.id}
+              item={item}
+              slideFrom={slideFrom}
+              onDismissed={remove}
+            />
+          ))}
+        </div>,
+        document.body,
+      )}
+    </ToastContext.Provider>
+  );
+}
+
+===== src/components/organisms/VideoCard/VideoCard.tsx =====
+import { Avatar } from '../../atoms/Avatar/Avatar';
+import { Button } from '../../atoms/Button/Button';
+import styles from './VideoCard.module.css';
+
+export type VideoCardProps = {
+  thumbnailSrc?: string;
+  videoUrl?: string;
+  title: string;
+  presenterName?: string;
+  presenterRole?: string;
+  presenterAvatarSrc?: string;
+  duration?: string;
+  ctaLabel?: string;
+  onCtaClick?: () => void;
+  onPlay?: () => void;
+};
+
+export const VideoCard = ({
+  thumbnailSrc,
+  videoUrl,
+  title,
+  presenterName,
+  presenterRole,
+  presenterAvatarSrc,
+  duration,
+  ctaLabel = 'View Presentation',
+  onCtaClick,
+  onPlay,
+}: VideoCardProps) => {
+  const thumb =
+    thumbnailSrc != null && thumbnailSrc.length > 0 ? (
+      <img className={styles.thumbnail} src={thumbnailSrc} alt="" />
+    ) : (
+      <div className={styles.thumbnailFallback} aria-hidden />
+    );
+
+  const openVideo = () => {
+    onPlay?.();
+    if (videoUrl != null && videoUrl.length > 0) {
+      window.open(videoUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  return (
+    <article className={styles.root}>
+      <div className={styles.thumbWrap}>
+        {thumb}
+        <button
+          type="button"
+          className={styles.play}
+          aria-label={`Play: ${title}`}
+          onClick={openVideo}
+        >
+          <span className={styles.playTriangle} aria-hidden />
+        </button>
+        {duration != null && duration.length > 0 ? (
+          <span className={styles.duration}>{duration}</span>
+        ) : null}
+      </div>
+      <div className={styles.body}>
+        <h2 className={styles.cardTitle}>{title}</h2>
+        {presenterName != null && presenterName.length > 0 ? (
+          <div className={styles.presenterRow}>
+            <Avatar
+              src={presenterAvatarSrc}
+              name={presenterName}
+              alt=""
+              size="presenter"
+              variant="circle"
+            />
+            <div className={styles.presenterText}>
+              <p className={styles.presenterName}>{presenterName}</p>
+              {presenterRole != null && presenterRole.length > 0 ? (
+                <p className={styles.presenterRole}>{presenterRole}</p>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+        {ctaLabel != null && ctaLabel.length > 0 ? (
+          <div className={styles.ctaSlot}>
+            <Button
+              label={ctaLabel}
+              type="transparent"
+              onClick={onCtaClick}
+            />
+          </div>
+        ) : null}
+      </div>
+    </article>
+  );
+};
+
+===== src/components/organisms/VideoPlayer/VideoPlayer.tsx =====
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+import styles from './VideoPlayer.module.css';
+
+export type VideoPlayerProps = {
+  src?: string;
+  poster?: string;
+  title?: string;
+  autoplay?: boolean;
+  loop?: boolean;
+  muted?: boolean;
+};
+
+function formatTime(sec: number): string {
+  if (!Number.isFinite(sec) || sec < 0) return '0:00';
+  const s = Math.floor(sec % 60);
+  const m = Math.floor(sec / 60);
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+export const VideoPlayer = ({
+  src,
+  poster,
+  title,
+  autoplay = false,
+  loop = false,
+  muted = false,
+}: VideoPlayerProps) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const progressRef = useRef<HTMLDivElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const [current, setCurrent] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [vol, setVol] = useState(1);
+  const [mutedState, setMutedState] = useState(muted);
+
+  useEffect(() => {
+    setMutedState(muted);
+  }, [muted]);
+
+  const pct = duration > 0 ? (current / duration) * 100 : 0;
+
+  const togglePlay = useCallback(() => {
+    const el = videoRef.current;
+    if (!el) return;
+    if (el.paused) {
+      void el.play();
+    } else {
+      el.pause();
+    }
+  }, []);
+
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+    el.muted = mutedState;
+  }, [mutedState]);
+
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+    el.volume = vol;
+  }, [vol]);
+
+  const seekFromClientX = (clientX: number) => {
+    const el = videoRef.current;
+    const track = progressRef.current;
+    if (!el || !track || !duration) return;
+    const rect = track.getBoundingClientRect();
+    const x = Math.min(Math.max(clientX - rect.left, 0), rect.width);
+    el.currentTime = (x / rect.width) * duration;
+  };
+
+  const toggleFullscreen = async () => {
+    const root = rootRef.current;
+    if (!root) return;
+    if (!document.fullscreenElement) {
+      await root.requestFullscreen();
+    } else {
+      await document.exitFullscreen();
+    }
+  };
+
+  if (src == null || src === '') {
+    return (
+      <div
+        ref={rootRef}
+        className={styles.root}
+        role="region"
+        aria-label={title ?? 'Video player'}
+      >
+        {title != null ? (
+          <span className={styles.visuallyHidden}>{title}</span>
+        ) : null}
+        <div className={styles.placeholder}>
+          <div className={styles.placeholderPlay} aria-hidden />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      ref={rootRef}
+      className={styles.root}
+      role="region"
+      aria-label={title ?? 'Video player'}
+    >
+      {title != null ? (
+        <span className={styles.visuallyHidden}>{title}</span>
+      ) : null}
+      <video
+        ref={videoRef}
+        className={styles.video}
+        src={src}
+        poster={poster}
+        autoPlay={autoplay}
+        loop={loop}
+        muted={muted}
+        playsInline
+        controls={false}
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
+        onTimeUpdate={() => {
+          const el = videoRef.current;
+          if (el) setCurrent(el.currentTime);
+        }}
+        onLoadedMetadata={() => {
+          const el = videoRef.current;
+          if (el) setDuration(el.duration || 0);
+        }}
+        onEnded={() => setPlaying(false)}
+      />
+      <div className={styles.controls}>
+        <div
+          ref={progressRef}
+          className={styles.progressTrack}
+          role="slider"
+          tabIndex={0}
+          aria-valuemin={0}
+          aria-valuemax={Math.round(duration)}
+          aria-valuenow={Math.round(current)}
+          aria-label="Seek"
+          onClick={(e) => seekFromClientX(e.clientX)}
+          onKeyDown={(e) => {
+            const el = videoRef.current;
+            if (!el || !duration) return;
+            if (e.key === 'ArrowRight') {
+              e.preventDefault();
+              el.currentTime = Math.min(duration, el.currentTime + 5);
+            }
+            if (e.key === 'ArrowLeft') {
+              e.preventDefault();
+              el.currentTime = Math.max(0, el.currentTime - 5);
+            }
+          }}
+        >
+          <div
+            className={styles.progressFill}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        <div className={styles.row}>
+          <button
+            type="button"
+            className={styles.playBtn}
+            aria-label={playing ? 'Pause' : 'Play'}
+            onClick={togglePlay}
+          >
+            {playing ? (
+              <span className={styles.iconPause} aria-hidden />
+            ) : (
+              <span className={styles.iconPlay} aria-hidden />
+            )}
+          </button>
+          <span className={styles.time} aria-live="polite">
+            {formatTime(current)} / {formatTime(duration)}
+          </span>
+          <button
+            type="button"
+            className={styles.iconBtn}
+            aria-label={mutedState ? 'Unmute' : 'Mute'}
+            onClick={() => setMutedState((m) => !m)}
+          >
+            <span className={styles.volumeIcon} aria-hidden />
+          </button>
+          <input
+            className={styles.volumeRange}
+            type="range"
+            min={0}
+            max={1}
+            step={0.05}
+            value={mutedState ? 0 : vol}
+            aria-label="Volume"
+            onChange={(e) => {
+              const v = Number(e.target.value);
+              setVol(v);
+              if (v > 0) setMutedState(false);
+            }}
+          />
+          <button
+            type="button"
+            className={styles.iconBtn}
+            aria-label="Fullscreen"
+            onClick={() => void toggleFullscreen()}
+          >
+            <span className={styles.fullscreenIcon} aria-hidden />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+

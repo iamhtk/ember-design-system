@@ -10,7 +10,7 @@ import { PropsTable } from '../../helpers/PropsTable'
 import { StoryTabs } from '../../helpers/StoryTabs'
 
 const sizes = ['sm', 'md', 'lg'] as const
-const variants = ['primary', 'success', 'info'] as const
+const variants = ['primary', 'success', 'info', 'warning', 'error'] as const
 
 const row = { display: 'flex', flexWrap: 'wrap' as const, gap: 'var(--space-600)', alignItems: 'center' }
 
@@ -99,13 +99,17 @@ export function LoaderPage() {
               center: true,
               code: `<Loader variant="primary" />
 <Loader variant="success" />
-<Loader variant="info" />`,
+<Loader variant="info" />
+<Loader variant="warning" />
+<Loader variant="error" />`,
               children: (
                 <ComponentDemo center padding="sm" background="transparent">
                   <div style={row}>
                     <Loader variant="primary" label="Primary" />
                     <Loader variant="success" label="Success" />
                     <Loader variant="info" label="Info" />
+                    <Loader variant="warning" label="Warning" />
+                    <Loader variant="error" label="Error" />
                   </div>
                 </ComponentDemo>
               ),
@@ -140,7 +144,7 @@ export function LoaderPage() {
             { name: 'size', type: "'sm' | 'md' | 'lg'", default: "'md'", description: 'Spinner scale.', required: false },
             {
               name: 'variant',
-              type: "'primary' | 'success' | 'info'",
+              type: "'primary' | 'success' | 'info' | 'warning' | 'error'",
               default: "'primary'",
               description: 'Stroke color.',
               required: false,

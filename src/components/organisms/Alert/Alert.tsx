@@ -1,4 +1,5 @@
 import { useCallback, useState, type TransitionEvent } from 'react';
+import { Icon, type IconName } from '../../atoms/Icon';
 import styles from './Alert.module.css';
 
 export type AlertProps = {
@@ -23,11 +24,11 @@ const variantIconMap = {
   info: styles.iconInfo,
 } as const;
 
-const iconLetter: Record<NonNullable<AlertProps['variant']>, string> = {
-  success: 'S',
-  error: 'E',
-  warning: 'W',
-  info: 'i',
+const variantIconName: Record<NonNullable<AlertProps['variant']>, IconName> = {
+  success: 'check_circle',
+  error: 'error',
+  warning: 'warning_amber',
+  info: 'info',
 };
 
 export const Alert = ({
@@ -75,7 +76,7 @@ export const Alert = ({
       onTransitionEnd={handleTransitionEnd}
     >
       <span className={iconClass} aria-hidden="true">
-        {iconLetter[variant]}
+        <Icon name={variantIconName[variant]} size={20} />
       </span>
       <div className={styles.body}>
         {title != null ? <p className={styles.title}>{title}</p> : null}

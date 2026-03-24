@@ -6,7 +6,7 @@ export type StatCardProps = {
   label: string;
   trend?: 'up' | 'down' | 'neutral';
   trendValue?: string;
-  variant?: 'primary' | 'success' | 'info' | 'warning';
+  variant?: 'primary' | 'success' | 'info' | 'warning' | 'error';
   icon?: ReactNode;
   description?: string;
 };
@@ -16,6 +16,7 @@ const variantClassMap = {
   success: styles.variantSuccess,
   info: styles.variantInfo,
   warning: styles.variantWarning,
+  error: styles.variantError,
 } as const;
 
 export const StatCard = ({

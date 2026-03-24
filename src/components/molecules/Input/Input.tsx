@@ -1,5 +1,5 @@
 import { useId } from 'react';
-import type { ReactNode } from 'react';
+import type { FocusEvent, ReactNode } from 'react';
 import { Field } from '../../atoms/Field/Field';
 import type { FieldProps } from '../../atoms/Field/Field';
 import { Label } from '../../atoms/Label/Label';
@@ -19,6 +19,8 @@ export type InputProps = {
   type?: 'text' | 'email' | 'password';
   status?: 'default' | 'hover' | 'focus' | 'error' | 'disabled';
   width?: string;
+  onFocus?: (e: FocusEvent<HTMLInputElement>) => void;
+  onBlur?: (e: FocusEvent<HTMLInputElement>) => void;
 };
 
 export const Input = ({
@@ -35,6 +37,8 @@ export const Input = ({
   type: inputType = 'text',
   status = 'default',
   width,
+  onFocus,
+  onBlur,
 }: InputProps) => {
   const baseId = useId();
   const inputId = `input-${baseId}`;
@@ -74,6 +78,8 @@ export const Input = ({
         placeholder={placeholder}
         value={value}
         onChange={onChange}
+        onFocus={onFocus}
+        onBlur={onBlur}
         status={fieldStatus}
         iconLeft={iconLeft}
         iconRight={iconRight}

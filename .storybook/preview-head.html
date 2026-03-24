@@ -1,0 +1,73 @@
+<style>
+  /* Dark background for docs pages */
+  .sbdocs-wrapper,
+  .sbdocs,
+  #storybook-docs,
+  .docs-story {
+    background-color: #1B1B1F !important;
+    color: #F5F5F7 !important;
+  }
+  .docs-story {
+    background-color: #232329 !important;
+    border: 1px solid rgba(255,255,255,0.06) !important;
+    border-radius: 8px !important;
+  }
+  /* Darken the args table */
+  .docblock-argstable,
+  .docblock-argstable-body,
+  .docblock-argstable-body tr,
+  .docblock-argstable-body td,
+  .docblock-argstable-head th {
+    background-color: #232329 !important;
+    color: #F5F5F7 !important;
+    border-color: rgba(255,255,255,0.06) !important;
+  }
+  .docblock-argstable-body tr:hover td {
+    background-color: rgba(255,255,255,0.03) !important;
+  }
+  /* ArgTable category/group separator rows (CONTENT/APPEARANCE/...) */
+  .docblock-argstable-body td[colspan],
+  .docblock-argstable-body tr > td[colspan],
+  .docblock-argstable-body tr > td[colspan] > span,
+  .docblock-argstable [class*="category"],
+  .docblock-argstable [class*="Category"] {
+    background-color: #1B1B1F !important;
+    color: #A1A1AA !important;
+    border-color: rgba(255,255,255,0.08) !important;
+  }
+  .docblock-argstable-body tr > td[colspan] {
+    border-top: 1px solid rgba(255,255,255,0.08) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+  }
+  /* Controls in docs tables should inherit dark surface */
+  .docblock-argstable input,
+  .docblock-argstable select,
+  .docblock-argstable textarea,
+  .docblock-argstable button {
+    background-color: #232329 !important;
+    color: #F5F5F7 !important;
+    border-color: rgba(255,255,255,0.16) !important;
+  }
+  /* Source code block */
+  .docblock-source,
+  .docblock-source pre {
+    background-color: #141416 !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    border-radius: 8px !important;
+  }
+  /* Headings in docs */
+  .sbdocs h1, .sbdocs h2, .sbdocs h3 {
+    color: #F5F5F7 !important;
+  }
+  .sbdocs p, .sbdocs li {
+    color: #A1A1AA !important;
+  }
+  /* Canvas background */
+  #storybook-preview-wrapper {
+    background: #1B1B1F !important;
+  }
+  /* Canvas breathing room */
+  .sb-show-main .sb-main-padded {
+    padding: var(--space-600, 24px) !important;
+  }
+</style>

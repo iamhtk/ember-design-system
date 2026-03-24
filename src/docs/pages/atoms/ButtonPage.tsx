@@ -9,11 +9,58 @@ import { DocsPage, DocsSection } from '../../helpers/DocsPage'
 import { DosAndDonts } from '../../helpers/DosAndDonts'
 import { PropsTable } from '../../helpers/PropsTable'
 import { StoryTabs } from '../../helpers/StoryTabs'
+import matrixStyles from './ButtonPage.module.css'
 
 const btnTypes = ['default', 'outlined', 'transparent'] as const
-const schemes = ['primary', 'success', 'information'] as const
+const schemes = ['primary', 'information', 'success', 'warning', 'error'] as const
 
 const row = { display: 'flex', flexWrap: 'wrap' as const, gap: 'var(--space-400)', alignItems: 'center' }
+
+function schemeColumnTitle(s: (typeof schemes)[number]): string {
+  if (s === 'information') return 'Information'
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
+
+function ButtonColorMatrix() {
+  const matrixRows: {
+    label: string
+    type: (typeof btnTypes)[number]
+    disabled?: boolean
+  }[] = [
+    { label: 'Filled', type: 'default' },
+    { label: 'Outlined', type: 'outlined' },
+    { label: 'Transparent', type: 'transparent' },
+    { label: 'Disabled', type: 'default', disabled: true },
+  ]
+
+  return (
+    <div className={matrixStyles.matrixWrap}>
+      <div className={matrixStyles.matrixHeaderRow}>
+        <span aria-hidden className={matrixStyles.matrixRowLabel} />
+        {schemes.map((s) => (
+          <div key={s} className={matrixStyles.matrixHeader}>
+            {schemeColumnTitle(s)}
+          </div>
+        ))}
+      </div>
+      {matrixRows.map((rowDef) => (
+        <div key={rowDef.label} className={matrixStyles.matrixRow}>
+          <div className={matrixStyles.matrixRowLabel}>{rowDef.label}</div>
+          {schemes.map((colorScheme) => (
+            <div key={colorScheme} className={matrixStyles.matrixCell}>
+              <Button
+                label="Button"
+                type={rowDef.type}
+                colorScheme={colorScheme}
+                disabled={rowDef.disabled ?? false}
+              />
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  )
+}
 
 export function ButtonPage() {
   const [ctrlLabel, setCtrlLabel] = useState('Button Text')
@@ -129,21 +176,16 @@ export function ButtonPage() {
               ),
             },
             {
-              label: 'Color Schemes',
+              label: 'Color matrix',
               background: 'grid',
               center: true,
-              code: `<div style={{ display: 'flex', gap: 'var(--space-400)', flexWrap: 'wrap' }}>
-  <Button colorScheme="primary" label="Primary" type="default" />
-  <Button colorScheme="success" label="Success" type="default" />
-  <Button colorScheme="information" label="Information" type="default" />
-</div>`,
+              code: `// 5 colorScheme × 4 rows (filled, outlined, transparent, disabled)
+<Button colorScheme="primary" type="default" label="Button" />
+<Button colorScheme="information" type="outlined" label="Button" />
+// …`,
               children: (
-                <ComponentDemo center padding="sm" background="transparent">
-                  <div style={row}>
-                    <Button colorScheme="primary" label="Primary" type="default" />
-                    <Button colorScheme="success" label="Success" type="default" />
-                    <Button colorScheme="information" label="Information" type="default" />
-                  </div>
+                <ComponentDemo center padding="md" background="transparent">
+                  <ButtonColorMatrix />
                 </ComponentDemo>
               ),
             },
@@ -213,7 +255,7 @@ export function ButtonPage() {
             },
             {
               name: 'colorScheme',
-              type: "'primary' | 'success' | 'information'",
+              type: "'primary' | 'information' | 'success' | 'warning' | 'error'",
               default: "'primary'",
               description: 'Brand palette for fills and borders.',
               required: false,

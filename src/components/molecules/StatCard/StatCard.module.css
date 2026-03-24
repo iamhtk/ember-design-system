@@ -50,6 +50,10 @@
   color: var(--color-warning-default);
 }
 
+.variantError .value {
+  color: var(--color-error-default);
+}
+
 .variantPrimary .iconSlot {
   color: var(--color-primary-default);
 }
@@ -64,6 +68,10 @@
 
 .variantWarning .iconSlot {
   color: var(--color-warning-default);
+}
+
+.variantError .iconSlot {
+  color: var(--color-error-default);
 }
 
 .trend {

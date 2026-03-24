@@ -463,6 +463,12 @@
   max-width: 720px;
 }
 
+.linkToColors {
+  color: var(--color-primary-default);
+  text-decoration: underline;
+  text-underline-offset: var(--space-100);
+}
+
 .interactiveRefCategory {
   margin-top: 28px;
 }

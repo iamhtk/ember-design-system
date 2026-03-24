@@ -46,6 +46,57 @@
   --btn-ring: var(--color-information-default);
 }
 
+.schemeWarning {
+  --btn-accent: #ffac0d;
+  --btn-accent-hover: #ffc75d;
+  --btn-accent-active: color-mix(in srgb, #ffac0d 78%, var(--color-neutral-black));
+  --btn-ring: #ffac0d;
+}
+
+.schemeError {
+  --btn-accent: #ff270d;
+  --btn-accent-hover: #ff523d;
+  --btn-accent-active: color-mix(in srgb, #ff270d 78%, var(--color-neutral-black));
+  --btn-ring: #ff270d;
+}
+
+.schemeWarning.typeDefault {
+  border-color: #ffac0d;
+  color: #000000;
+}
+
+.schemeWarning.typeDefault.interactive:hover:not(:disabled),
+.schemeWarning.typeDefault.forceHover:not(:disabled) {
+  border-color: #ffc75d;
+}
+
+.schemeWarning.typeDefault.interactive:active:not(:disabled),
+.schemeWarning.typeDefault.forcePressed:not(:disabled) {
+  box-shadow: inset -1px -5px 4px 0px rgba(0, 0, 0, 0.6);
+}
+
+.schemeError.typeDefault {
+  border-color: #ff270d;
+  color: #000000;
+}
+
+.schemeError.typeDefault.interactive:hover:not(:disabled),
+.schemeError.typeDefault.forceHover:not(:disabled) {
+  border-color: #ff523d;
+}
+
+.schemeError.typeDefault.interactive:active:not(:disabled),
+.schemeError.typeDefault.forcePressed:not(:disabled) {
+  box-shadow: inset -1px -5px 4px 0px rgba(0, 0, 0, 0.6);
+}
+
+.root.schemeWarning:disabled,
+.root.schemeError:disabled {
+  background-color: #e0e0e0;
+  border-color: #8d8d8d;
+  color: #636363;
+}
+
 .iconSlot {
   display: inline-flex;
   flex-shrink: 0;
@@ -135,4 +186,20 @@
   cursor: not-allowed;
   box-shadow: none;
   outline: none;
+}
+
+/* Default info_outline SVG when iconLeft/iconRight is true and iconLeft1/iconRight1 is null */
+.defaultInfoIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  line-height: 0;
+}
+
+.defaultInfoIcon svg {
+  display: block;
+  width: 20px;
+  height: 20px;
 }

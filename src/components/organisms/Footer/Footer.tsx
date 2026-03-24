@@ -14,8 +14,7 @@ export type FooterProps = {
   onSubscribe?: () => void;
 };
 
-export const CWPC_LOGO_SRC_DEFAULT =
-  'https://www.figma.com/api/mcp/asset/ec8b27e0-6682-46b5-9d3e-915a870260bb';
+export const CWPC_LOGO_SRC_DEFAULT = '';
 
 const defaultColumns: FooterColumn[] = [
   {

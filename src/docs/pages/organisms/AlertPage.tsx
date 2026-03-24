@@ -40,6 +40,22 @@ export function AlertPage() {
       status="stable"
     >
       <DocsSection title="Preview">
+        <p
+          style={{
+            fontSize: 'var(--font-size-body-sm)',
+            color: 'var(--text-default-caption)',
+            marginBottom: 'var(--space-400)',
+            maxWidth: '42rem',
+            lineHeight: 'var(--line-height-body)',
+          }}
+        >
+          Examples below render the live <code style={{ color: 'var(--color-primary-default)' }}>Alert</code>{' '}
+          component. Icons come from the shared <code style={{ color: 'var(--color-primary-default)' }}>Icon</code>{' '}
+          component (e.g. <code style={{ color: 'var(--color-primary-default)' }}>check_circle</code>,{' '}
+          <code style={{ color: 'var(--color-primary-default)' }}>error</code>,{' '}
+          <code style={{ color: 'var(--color-primary-default)' }}>warning_amber</code>,{' '}
+          <code style={{ color: 'var(--color-primary-default)' }}>info</code>).
+        </p>
         <StoryTabs
           defaultStory={0}
           stories={[

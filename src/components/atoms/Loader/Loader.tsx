@@ -2,7 +2,7 @@ import styles from './Loader.module.css';
 
 export type LoaderProps = {
   size?: 'sm' | 'md' | 'lg';
-  variant?: 'primary' | 'success' | 'info';
+  variant?: 'primary' | 'success' | 'info' | 'warning' | 'error';
   label?: string;
 };
 
@@ -16,6 +16,8 @@ const variantClassMap = {
   primary: styles.variantPrimary,
   success: styles.variantSuccess,
   info: styles.variantInfo,
+  warning: styles.variantWarning,
+  error: styles.variantError,
 } as const;
 
 export const Loader = ({

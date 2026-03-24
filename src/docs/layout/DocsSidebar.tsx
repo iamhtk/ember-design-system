@@ -20,6 +20,8 @@ const nav: NavGroup[] = [
     items: [
       { label: 'Introduction', path: '/docs' },
       { label: 'Tokens', path: '/docs/tokens' },
+      { label: 'Colors', path: '/docs/colors' },
+      { label: 'Icon library', path: '/docs/icons' },
       { label: 'Layout & Spacing', path: '/docs/layout' },
       { label: 'Grid', path: '/docs/grid' },
       { label: 'Elevation', path: '/docs/elevation' },

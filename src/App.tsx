@@ -4,6 +4,8 @@ import { ElevationPage } from './docs/pages/ElevationPage'
 import { GridPage } from './docs/pages/GridPage'
 import { IntroPage } from './docs/pages/IntroPage'
 import { LayoutPage } from './docs/pages/LayoutPage'
+import { ColorsPage } from './docs/pages/ColorsPage'
+import { IconLibraryPage } from './docs/pages/IconLibraryPage'
 import { TokensPage } from './docs/pages/TokensPage'
 import { AvatarPage } from './docs/pages/atoms/AvatarPage'
 import { BadgePage } from './docs/pages/atoms/BadgePage'
@@ -85,6 +87,8 @@ export default function App() {
         <Route path="molecules" element={<MoleculesOverviewPage />} />
         <Route path="organisms" element={<OrganismsOverviewPage />} />
         <Route path="tokens" element={<TokensPage />} />
+        <Route path="colors" element={<ColorsPage />} />
+        <Route path="icons" element={<IconLibraryPage />} />
         <Route path="layout" element={<LayoutPage />} />
         <Route path="grid" element={<GridPage />} />
         <Route path="elevation" element={<ElevationPage />} />

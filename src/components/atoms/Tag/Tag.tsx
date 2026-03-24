@@ -3,7 +3,14 @@ import styles from './Tag.module.css';
 export type TagProps = {
   label: string;
   onRemove?: () => void;
-  variant?: 'default' | 'primary' | 'success';
+  variant?:
+    | 'default'
+    | 'primary'
+    | 'success'
+    | 'warning'
+    | 'error'
+    | 'info'
+    | 'neutral';
   disabled?: boolean;
 };
 
@@ -11,6 +18,10 @@ const variantClassMap = {
   default: styles.variantDefault,
   primary: styles.variantPrimary,
   success: styles.variantSuccess,
+  warning: styles.variantWarning,
+  error: styles.variantError,
+  info: styles.variantInfo,
+  neutral: styles.variantNeutral,
 } as const;
 
 export const Tag = ({

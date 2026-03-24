@@ -50,6 +50,18 @@
   border-left-color: var(--color-information-default);
 }
 
+.variantWarning {
+  border-right-color: var(--color-warning-default);
+  border-bottom-color: var(--color-warning-default);
+  border-left-color: var(--color-warning-default);
+}
+
+.variantError {
+  border-right-color: var(--color-error-default);
+  border-bottom-color: var(--color-error-default);
+  border-left-color: var(--color-error-default);
+}
+
 .visuallyHidden {
   position: absolute;
   width: var(--border-width-xs);

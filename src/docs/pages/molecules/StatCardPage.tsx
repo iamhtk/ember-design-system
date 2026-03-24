@@ -10,7 +10,7 @@ import { DosAndDonts } from '../../helpers/DosAndDonts'
 import { PropsTable } from '../../helpers/PropsTable'
 import { StoryTabs } from '../../helpers/StoryTabs'
 
-const variants = ['primary', 'success', 'info', 'warning'] as const
+const variants = ['primary', 'success', 'info', 'warning', 'error'] as const
 const trendOpts = ['none', 'up', 'down', 'neutral'] as const
 
 export function StatCardPage() {
@@ -143,6 +143,17 @@ export function StatCardPage() {
               ),
             },
             {
+              label: 'Error',
+              background: 'grid',
+              center: true,
+              code: '<StatCard value="3" label="Open incidents" variant="error" />',
+              children: (
+                <ComponentDemo center padding="sm" background="transparent">
+                  <StatCard value="3" label="Open incidents" variant="error" />
+                </ComponentDemo>
+              ),
+            },
+            {
               label: 'Trend up',
               background: 'grid',
               center: true,
@@ -205,7 +216,7 @@ export function StatCardPage() {
             { name: 'label', type: 'string', description: 'Supporting label.', required: true },
             {
               name: 'variant',
-              type: "'primary' | 'success' | 'info' | 'warning'",
+              type: "'primary' | 'success' | 'info' | 'warning' | 'error'",
               default: "'primary'",
               description: 'Semantic color.',
               required: false,
